@@ -25,10 +25,13 @@
  *  - DEL : /carnets/:carnet/themes/:themes/textes/:textes              Suppression d'un texte
  *          /carnets/:carnet/themes/:themes/image/:images               Suppresion d'une image
  *          /carnets/:carnet/themes/:themes/commentaires/:commentaire   Suppression d'un com
- *          /carnets/:carnet/themes/:themes/                            Suppresion d'un theme
+ *          /carnets/:carnet/themes/:themes/                            Supppresion d'un theme
  *          /carnets/:carnet/                                           Suppresion d'un carnet
  */
 
+/**
+ * Connexion
+ */
 /*Information de Connection*/
 var express    = require("express");
 var mysql      = require('mysql');
@@ -79,6 +82,7 @@ app.post("/authenticate",function(req,res){
             }
             else {
                 res.writeHead(200);
+                res.end();
                 res.end(JSON.stringify(rows[0]));
             }
         });
@@ -86,29 +90,164 @@ app.post("/authenticate",function(req,res){
 });
 
 /**
- * GET
- * Retourne l'id du carnet du users
- * /carnets/:carnet/
+ * Retourne la liste des textes d'un theme
+ * paramètre id du theme
  */
-app.get("/users/carnet/:id",function(req,res){
-    var user = "aurelie.jollet@carnet.fr";
+app.get("/themes/textes/id/:id",function(req,res){
+    var theme = req.params.id;
 
-    connection.query('SELECT * FROM `carnetvoyage` WHERE emailutilisateur = ?',[user], function(err, rows, fields) {
-        connection.end();
-        if (err) {
-            res.writeHead(401);
-            res.end();
-            console.log("401 : GET : /users/carnet \n");
-        }
-        else {
-            res.writeHead(200);
-            res.end(rows[0]);
-            console.log("200 : GET : /users/carnet \n");
-        }
-    });
+    connection.query(
+        'SELECT idtexte, titretexte, contenutexte, datetext, `theme`.idtheme FROM `theme` ' +
+        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
+        'WHERE `theme`.idtheme = ?',
+        [theme], function(err, rows, fields) {
+            connection.end();
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
 });
 
+/**
+ * Retourne la liste des textes d'un theme
+ * paramètre nom du theme
+ */
+app.get("/themes/textes/nom/:id",function(req,res){
+    var theme = req.params.id;
 
+    connection.query(
+        'SELECT idtexte, titretexte, contenutexte, datetext, `theme`.idtheme FROM `theme` ' +
+        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
+        'WHERE `theme`.nomtheme = ?',
+        [theme], function(err, rows, fields) {
+            connection.end();
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
+});
+
+/**
+ * Retourne la liste des images d'un theme
+ * id theme
+ */
+app.get("/themes/images/id/:id",function(req,res){
+    var theme = req.params.id;
+
+    connection.query(
+        'SELECT idimage, pathimage, legendeimage, titreimage, `theme`.idtheme FROM `theme` ' +
+        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
+        'WHERE `theme`.idtheme = ?',
+        [theme], function(err, rows, fields) {
+            connection.end();
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
+});
+
+/**
+ * Retourne la liste des images d'un theme
+ * nom du theme
+ */
+app.get("/themes/images/nom/:id",function(req,res){
+    var theme = req.params.id;
+
+    connection.query(
+        'SELECT idimage, pathimage, legendeimage, titreimage, `theme`.idtheme FROM `theme` ' +
+        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
+        'WHERE `theme`.nomtheme = ?',
+        [theme], function(err, rows, fields) {
+            connection.end();
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
+});
+
+/**
+ * Retourne les commentaires du theme
+ */
+
+/**
+ * Retourne la liste des themes du carnet
+ */
+
+/**
+ * Retourne l'id du carnet du users
+ */
+
+/**
+ * Ajout d'un nouveau texte
+ */
+
+/**
+ * Ajout d'une nouvelle image
+ */
+
+/**
+ * Ajout d'un commentaire sur le theme
+ */
+
+/**
+ * Modification du texte
+ */
+
+/**
+ * Modification de l'image
+ */
+
+/**
+ * Modification du nom du theme
+ */
+
+/**
+ * Suppression d'un texte
+ */
+
+/**
+ * Suppression d'une image
+ */
+
+/**
+ * Suppression d'un commentaire
+ */
+
+/**
+ * Suppression d'un theme
+ */
+
+/**
+ * Suppression d'un carnet
+ */
 
 app.get("/users",function(req,res){
     connection.query('SELECT * from utilisateur LIMIT 2', function(err, rows, fields) {
