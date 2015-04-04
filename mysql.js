@@ -101,7 +101,7 @@ app.get("/themes/textes/id/:id",function(req,res){
         'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
         'WHERE `theme`.idtheme = ?',
         [theme], function(err, rows, fields) {
-            connection.end();
+
             if (err) {
                 res.writeHead(401);
                 res.end();
@@ -127,7 +127,7 @@ app.get("/themes/textes/nom/:id",function(req,res){
         'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
         'WHERE `theme`.nomtheme = ?',
         [theme], function(err, rows, fields) {
-            connection.end();
+
             if (err) {
                 res.writeHead(401);
                 res.end();
@@ -153,7 +153,7 @@ app.get("/themes/images/id/:id",function(req,res){
         'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
         'WHERE `theme`.idtheme = ?',
         [theme], function(err, rows, fields) {
-            connection.end();
+
             if (err) {
                 res.writeHead(401);
                 res.end();
@@ -179,7 +179,7 @@ app.get("/themes/images/nom/:id",function(req,res){
         'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
         'WHERE `theme`.nomtheme = ?',
         [theme], function(err, rows, fields) {
-            connection.end();
+
             if (err) {
                 res.writeHead(401);
                 res.end();
@@ -195,58 +195,167 @@ app.get("/themes/images/nom/:id",function(req,res){
 
 /**
  * Retourne les commentaires du theme
+ * SELECT * FROM `commenter` WHERE idtheme = ?;
  */
+app.get("/themes/commentaire/id/:id",function(req,res){
+    var theme = req.params.id;
+
+    connection.query(
+        'SELECT * ' +
+        'FROM `commenter` ' +
+        'WHERE idtheme = ?',
+        [theme], function(err, rows, fields) {
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
+});
 
 /**
  * Retourne la liste des themes du carnet
+ * SELECT * FROM `theme` WHERE idcarnetvoyage = ?;
  */
+app.get("/themes/id/:id",function(req,res){
+    var theme = req.params.id;
+
+    connection.query(
+        'SELECT * ' +
+        'FROM `theme` ' +
+        'WHERE idcarnetvoyage = ?;',
+        [theme], function(err, rows, fields) {
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
+});
 
 /**
  * Retourne l'id du carnet du users
+ * SELECT idcarnetvoyage, nomcarnetvoyage FROM `carnetvoyage` WHERE emailutilisateur = ?;
  */
+app.get("/themes/email/:id",function(req,res){
+    var email = req.params.id;
+
+    connection.query(
+        'SELECT idcarnetvoyage, nomcarnetvoyage ' +
+        'FROM `carnetvoyage` ' +
+        'WHERE emailutilisateur = ?;',
+        [email], function(err, rows, fields) {
+            if (err) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : GET : /users/carnet \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /users/carnet \n");
+            }
+        });
+});
 
 /**
  * Ajout d'un nouveau texte
+ * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetext`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
+app.post("/texte",function(req,res){
+
+    var titretexte;
+    var contenutexte;
+    var datetexte;
+    var idtheme;
+
+    req.on('data', function(data) {
+        data = JSON.parse(data.toString());
+        titretexte = data.titretexte;
+        contenutexte = data.contenutexte;
+        datetexte = data.datetexte;
+        idtheme = data.idtexte;
+    });
+
+    req.on('end', function() {
+        connection.query('' +
+        'INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetext`, `idtheme`) ' +
+        'VALUES (' +
+        ''+ titretexte +'' +
+        ''+ contenutexte +'' +
+        ''+ datetexte +'' +
+        ''+ idtheme +'', function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.writeHead(401);
+                res.end();
+            }
+            else {
+                res.writeHead(200);
+                res.end();
+                res.end(JSON.stringify(rows[0]));
+            }
+        });
+    });
+});
 
 /**
  * Ajout d'une nouvelle image
+ * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
 
 /**
  * Ajout d'un commentaire sur le theme
+ * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
 
 /**
  * Modification du texte
+ * UPDATE `texte` SET `titretexte`=[value-2],`contenutexte`=[value-3] WHERE idtexte = ?
  */
 
 /**
  * Modification de l'image
+ * UPDATE `image` SET `pathimage`=[value-2],`legendeimage`=[value-3],`titreimage`=[value-5] WHERE idimage = ?
  */
 
 /**
  * Modification du nom du theme
+ * UPDATE `theme` SET `nomtheme`=[value-2] WHERE idtheme = ?;
  */
 
 /**
  * Suppression d'un texte
+ * DELETE FROM `texte` WHERE idtexte = ?;
  */
 
 /**
  * Suppression d'une image
+ * DELETE FROM `image` WHERE idimage = ?;
  */
 
 /**
  * Suppression d'un commentaire
+ * DELETE FROM `commenter` WHERE idtheme = ? AND emailutilisateur = ?;
  */
 
 /**
  * Suppression d'un theme
+ * DELETE FROM `theme` WHERE idtheme = ?;
  */
 
 /**
  * Suppression d'un carnet
+ * DELETE FROM `carnetvoyage` WHERE idcarnetvoyage = ?;
  */
 
 app.get("/users",function(req,res){
