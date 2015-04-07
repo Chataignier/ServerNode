@@ -17,6 +17,8 @@
  *  - POST: /carnets/:carnet/themes/:themes/textes                      Ajout d'un nouveau texte
  *          /carnets/:carnet/themes/:themes/images                      Ajout d'une nouvelle image
  *          /carnets/:carnet/themes/:themes/commentaires                Ajout d'un commentaire sur le theme
+ *          /carnets/:carnet/themes/                                    Ajout d'un theme
+ *
  *
  *  - PUT : /carnets/:carnet/themes/:themes/textes/:textes              Modification du textes
  *          /carnets/:carnet/themes/:themes/images/:images              Modification de l'images
@@ -47,6 +49,7 @@ var connection = mysql.createConnection({
 
 /* Configuration */
 var app = express();
+
 
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "http://localhost");
@@ -268,6 +271,8 @@ app.get("/themes/email/:id",function(req,res){
         });
 });
 
+var qs = require('querystring');
+
 /**
  * Ajout d'un nouveau texte
  * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetext`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
@@ -279,31 +284,46 @@ app.post("/texte",function(req,res){
     var datetexte;
     var idtheme;
 
-    req.on('data', function(data) {
-        data = JSON.parse(data.toString());
-        titretexte = data.titretexte;
-        contenutexte = data.contenutexte;
-        datetexte = data.datetexte;
-        idtheme = data.idtexte;
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
     });
 
     req.on('end', function() {
+        var post = qs.parse(body);
+
+        titretexte = post['titretexte'];
+        console.log(titretexte);
+        contenutexte = post['contenutexte'];
+        console.log(contenutexte);
+        datetexte = post['datetexte'];
+        console.log(datetexte);
+        idtheme = post['idtheme'];
+        console.log(idtheme);
+
         connection.query('' +
-        'INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetext`, `idtheme`) ' +
+        'INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) ' +
         'VALUES (' +
-        ''+ titretexte +'' +
-        ''+ contenutexte +'' +
-        ''+ datetexte +'' +
-        ''+ idtheme +'', function(err, rows, fields) {
-            if (err || rows.length == 0) {
-                res.writeHead(401);
-                res.end();
-            }
-            else {
-                res.writeHead(200);
-                res.end();
-                res.end(JSON.stringify(rows[0]));
-            }
+        '"'+ titretexte +'",' +
+        '"'+ contenutexte +'",' +
+        '"'+ datetexte +'",' +
+        ''+ idtheme +')',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : POST : /texte \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end();
+                    res.end(JSON.stringify(rows));
+                    console.log("200 : POST : /texte \n");
+                }
         });
     });
 });
@@ -312,29 +332,43 @@ app.post("/texte",function(req,res){
  * Ajout d'un commentaire sur le theme
  * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
-app.post("/image",function(req,res){
+app.post("/commenter",function(req,res){
 
     var idtheme;
     var emailtutilisateur;
     var commentaire;
     var datecommentaire;
 
-    req.on('data', function(data) {
-        data = JSON.parse(data.toString());
-        datecommentaire = data.datecommentaire;
-        emailtutilisateur = data.emailutilisateur;
-        commentaire = data.commentaire;
-        datecommentaire = data.datecommentaire;
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
     });
 
+    
     req.on('end', function() {
+
+        var post = qs.parse(body);
+
+        idtheme = post['idtheme'];
+        console.log(idtheme);
+        emailtutilisateur = post['emailtutilisateur'];
+        console.log(emailtutilisateur);
+        commentaire = post['commentaire'];
+        console.log(commentaire);
+        datecommentaire = post['datecommentaire'];
+        console.log(datecommentaire);
+
         connection.query('' +
         'INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) ' +
         'VALUES (' +
-        ''+ datecommentaire +'' +
-        ''+ emailtutilisateur +'' +
-        ''+ commentaire +'' +
-        ''+ datecommentaire +'', function(err, rows, fields) {
+        ''+ idtheme +',' +
+        '"'+ emailtutilisateur +'",' +
+        '"'+ commentaire +'",' +
+        '"'+ datecommentaire +'")', function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.writeHead(401);
                 res.end();
@@ -342,7 +376,7 @@ app.post("/image",function(req,res){
             else {
                 res.writeHead(200);
                 res.end();
-                res.end(JSON.stringify(rows[0]));
+                res.end(JSON.stringify(rows));
             }
         });
     });
