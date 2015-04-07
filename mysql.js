@@ -150,7 +150,7 @@ app.get("/themes/images/id/:id",function(req,res){
 
     connection.query(
         'SELECT idimage, pathimage, legendeimage, titreimage, `theme`.idtheme FROM `theme` ' +
-        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
+        'INNER JOIN `image` ON `theme`.idtheme = `image`.idtheme ' +
         'WHERE `theme`.idtheme = ?',
         [theme], function(err, rows, fields) {
 
@@ -309,14 +309,85 @@ app.post("/texte",function(req,res){
 });
 
 /**
- * Ajout d'une nouvelle image
- * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
- */
-
-/**
  * Ajout d'un commentaire sur le theme
  * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
+app.post("/image",function(req,res){
+
+    var idtheme;
+    var emailtutilisateur;
+    var commentaire;
+    var datecommentaire;
+
+    req.on('data', function(data) {
+        data = JSON.parse(data.toString());
+        datecommentaire = data.datecommentaire;
+        emailtutilisateur = data.emailutilisateur;
+        commentaire = data.commentaire;
+        datecommentaire = data.datecommentaire;
+    });
+
+    req.on('end', function() {
+        connection.query('' +
+        'INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) ' +
+        'VALUES (' +
+        ''+ datecommentaire +'' +
+        ''+ emailtutilisateur +'' +
+        ''+ commentaire +'' +
+        ''+ datecommentaire +'', function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.writeHead(401);
+                res.end();
+            }
+            else {
+                res.writeHead(200);
+                res.end();
+                res.end(JSON.stringify(rows[0]));
+            }
+        });
+    });
+});
+
+
+/**
+ * Ajout d'une nouvelle image
+ * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
+ */
+app.post("/image",function(req,res){
+
+    var pathimage;
+    var legendeimage;
+    var titreimage;
+    var idtheme;
+
+    req.on('data', function(data) {
+        data = JSON.parse(data.toString());
+        pathimage = data.pathimage;
+        legendeimage = data.legendeimage;
+        titreimage = data.titreimage;
+        idtheme = data.idtheme;
+    });
+
+    req.on('end', function() {
+        connection.query('' +
+        'INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) ' +
+        'VALUES (' +
+        ''+ pathimage +'' +
+        ''+ legendeimage +'' +
+        ''+ titreimage +'' +
+        ''+ idtheme +'', function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.writeHead(401);
+                res.end();
+            }
+            else {
+                res.writeHead(200);
+                res.end();
+                res.end(JSON.stringify(rows[0]));
+            }
+        });
+    });
+});
 
 /**
  * Modification du texte
