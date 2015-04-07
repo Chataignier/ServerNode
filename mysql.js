@@ -274,6 +274,134 @@ app.get("/themes/email/:id",function(req,res){
 var qs = require('querystring');
 
 /**
+ * Ajout d'un utilisateur/carnet
+ */
+app.post("/utilisateur",function(req,res){
+
+    var emailutilisateur;
+    var motdepasse;
+    var nomcarnet;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        emailutilisateur = post['emailutilisateur'];
+        console.log(emailutilisateur);
+        motdepasse = post['motdepasse'];
+        console.log(motdepasse);
+        nomcarnet = post['nomcarnet'];
+        console.log(nomcarnet);
+
+        connection.query('INSERT INTO `utilisateur`(`emailutilisateur`, `motdepasse`) ' +
+            'VALUES (' +
+            '"'+ emailutilisateur +'",' +
+            '"'+ motdepasse +'")'
+        );
+
+        connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
+            'VALUES (' +
+            '"'+ nomcarnet +'",' +
+            '"'+ emailutilisateur +'")'
+        );
+
+        connection.query("SELECT idcarnetvoyage FROM `carnetvoyage` WHERE " +
+            "emailutilisateur = '" + emailutilisateur +"';",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : POST : /carnet \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows));
+                    console.log("200 : POST : /carnet \n");
+                }
+            });
+    });
+});
+
+
+/**
+ * Ajout d'un theme
+ */
+app.post("/theme",function(req,res){
+
+    var nomtheme;
+    var emailutilisateur;
+    var idcarnetvoyage = '';
+
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+
+        var post = qs.parse(body);
+
+        /*connection.query('SELECT idcarnetvoyage ' +
+            'FROM `carnetvoyage` ' +
+            'WHERE emailutilisateur = "'+  post['emailutilisateur'] +'"',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : POST : /theme \n");
+                }
+                else {
+                    idcarnetvoyage = rows[0].idcarnetvoyage;
+                }
+            });*/
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        nomtheme = post['nomtheme'];
+        emailutilisateur = post['emailutilisateur'];
+        idcarnetvoyage = post['idcarnetvoyage'];
+
+        console.log(nomtheme);
+        console.log(idcarnetvoyage);
+
+        connection.query('INSERT INTO `theme`(`nomtheme`, `idcarnetvoyage`) ' +
+            'VALUES (' +
+            '"'+ nomtheme +'", ' +
+            ''+ idcarnetvoyage +')'
+        );
+
+        connection.query("SELECT idtheme FROM `theme` WHERE " +
+            "nomtheme = '" + nomtheme +"' AND " +
+            "idcarnetvoyage = " + idcarnetvoyage +" ;",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : POST : /theme \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows));
+                    console.log("200 : POST : /theme \n");
+                }
+            });
+    });
+});
+
+/**
  * Ajout d'un nouveau texte
  * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
@@ -482,8 +610,8 @@ app.put("/texte",function(req,res){
         console.log(idtexte);
 
         connection.query('UPDATE `texte` ' +
-            'SET `titretexte`='+ titretexte +',' +
-            '`contenutexte`= '+ contenutexte +' ' +
+            'SET `titretexte`= "'+ titretexte +'",' +
+            '`contenutexte`= "'+ contenutexte +'" ' +
             'WHERE idtexte = '+ idtexte +''
         , function(err, rows, fields) {
                 if (err || rows.length == 0) {
@@ -557,7 +685,7 @@ app.put("/image",function(req,res){
  * Modification du nom du theme
  * UPDATE `theme` SET `nomtheme`=[value-2] WHERE idtheme = ?;
  */
-app.put("/image",function(req,res){
+app.put("/theme",function(req,res){
 
     var nomtheme;
     var idtheme;
@@ -602,7 +730,7 @@ app.put("/image",function(req,res){
  * Suppression d'un texte
  * DELETE FROM `texte` WHERE idtexte = ?;
  */
-app.delete("/image",function(req,res){
+app.delete("/texte",function(req,res){
 
     var idtexte;
 
@@ -619,7 +747,7 @@ app.delete("/image",function(req,res){
     req.on('end', function() {
         var post = qs.parse(body);
 
-        nomtheme = post['idtexte'];
+        idtexte = post['idtexte'];
         console.log(idtexte);
 
         connection.query('DELETE FROM `texte` ' +
@@ -643,21 +771,169 @@ app.delete("/image",function(req,res){
  * Suppression d'une image
  * DELETE FROM `image` WHERE idimage = ?;
  */
+app.delete("/image",function(req,res){
+
+    var idimage;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        idimage = post['idimage'];
+        console.log(idimage);
+
+        connection.query('DELETE FROM `image` ' +
+            'WHERE idimage = '+ idimage +'',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : DEL : /texte \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : DEL : /texte \n");
+                }
+            });
+    });
+});
 
 /**
  * Suppression d'un commentaire
  * DELETE FROM `commenter` WHERE idtheme = ? AND emailutilisateur = ?;
  */
+app.delete("/commenter",function(req,res){
+
+    var idtheme;
+    var emailutilisateur;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        idtheme = post['idtheme'];
+        console.log(idtheme);
+        emailutilisateur = post['emailutilisateur'];
+        console.log(emailutilisateur);
+
+        connection.query('DELETE FROM `commenter` ' +
+            'WHERE idtheme = '+ idtheme +'' +
+            'AND emailutilisateur = "'+ emailutilisateur +'"',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : DEL : /commenter \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : DEL : /commenter \n");
+                }
+            });
+    });
+});
 
 /**
  * Suppression d'un theme
  * DELETE FROM `theme` WHERE idtheme = ?;
  */
+app.delete("/theme",function(req,res){
+
+    var idtheme;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        idtheme = post['idtheme'];
+        console.log(idtheme);
+
+        connection.query('DELETE FROM `theme` ' +
+            'WHERE idtheme = '+ idtheme +'',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : DEL : /commenter \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : DEL : /commenter \n");
+                }
+            });
+    });
+});
 
 /**
  * Suppression d'un carnet
  * DELETE FROM `carnetvoyage` WHERE idcarnetvoyage = ?;
  */
+app.delete("/carnet",function(req,res){
+
+    var idcarnet;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        idcarnet = post['idcarnet'];
+        console.log(idcarnet);
+
+        connection.query('DELETE FROM `carnetvoyage` ' +
+            'WHERE idcarnetvoyage = '+ idcarnet +'',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : DEL : /carnet \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : DEL : /carnet \n");
+                }
+            });
+    });
+});
 
 app.get("/users",function(req,res){
     connection.query('SELECT * from utilisateur LIMIT 2', function(err, rows, fields) {
@@ -668,19 +944,6 @@ app.get("/users",function(req,res){
             console.log('Error while performing Query.');
     });
 });
-
-
-/**
- * POST
- */
-
-/**
- * PUT
- */
-
-/**
- * DELETE
- */
 
 /**
  * Liste des Users
@@ -694,59 +957,5 @@ app.get("/users",function(req,res){
             console.log('Error while performing Query.');
     });
 });
-
-
-
-/**
- * Theme
- * Retour du theme dans un JSON
- *
- * SELECT * FROM `theme` INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme INNER JOIN `image` ON `image`.idtheme = `theme`.idtheme WHERE `theme`.idtheme = 1
- *
- * SELECT * FROM `theme` INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme WHERE `theme`.idtheme = 1
- *
- * SELECT * FROM `theme` INNER JOIN `image` ON `image`.idtheme = `theme`.idtheme WHERE `theme`.idtheme = 1
- */
-app.get("/themes/:id",function(req, res){
-    var id = req.params.id;
-    var images;
-    var head = 200;
-    var retour = new Array();
-
-    connection.query('SELECT * FROM `theme` WHERE `theme`.idtheme = ?', [id], function (err, rows, fields) {
-        connection.end();
-        if (err || rows.length == 0) {
-            res.writeHead(401);
-            res.end();
-        }
-        else {
-            /*retour.push(rows[0]);*/
-            var theme = new Array();
-            retour.push(theme);
-            console.log(retour);
-            res.writeHead(200);
-            res.end();
-        }
-    });
-
-    connection.query('SELECT * FROM `theme` INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme WHERE `theme`.idtheme = ?', [id], function (err, rows, fields) {
-        connection.end();
-        if (err || rows.length == 0) {
-            res.writeHead(401);
-            res.end();
-        }
-        else {
-            for (var key in rows){
-                retour.push(key);
-            }
-            console.log(retour);
-            res.writeHead(200);
-            res.end();
-        }
-    });
-
-});
-
-
 
 app.listen(3000);
