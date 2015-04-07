@@ -70,23 +70,39 @@ connection.connect(function(err){
  * Authentificate
  */
 app.post("/authenticate",function(req,res){
-    var email;
+    var emailutilisateur;
+    var motdepasse;
 
+    var body = '';
     req.on('data', function(data) {
-        data = JSON.parse(data.toString());
-        email = data.email;
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+
+        var post = qs.parse(body);
     });
 
     req.on('end', function() {
-        connection.query('SELECT * from utilisateur WHERE email = ?', [email], function(err, rows, fields) {
+        var post = qs.parse(body);
+
+        emailutilisateur = post['emailutilisateur'];
+        console.log(emailutilisateur);
+        motdepasse = post['motdepasse'];
+        console.log(motdepasse);
+
+        connection.query('SELECT * ' +
+        'FROM `utilisateur` ' +
+        'WHERE motdepasse = "'+ motdepasse +'" AND ' +
+        'emailutilisateur = "'+ emailutilisateur +'"', function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.writeHead(401);
                 res.end();
             }
             else {
                 res.writeHead(200);
-                res.end();
-                res.end(JSON.stringify(rows[0]));
+                res.end(JSON.stringify(rows[0].motdepasse));
             }
         });
     });
