@@ -275,7 +275,7 @@ var qs = require('querystring');
 
 /**
  * Ajout d'un nouveau texte
- * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetext`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
+ * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
 app.post("/texte",function(req,res){
 
@@ -311,19 +311,25 @@ app.post("/texte",function(req,res){
         '"'+ titretexte +'",' +
         '"'+ contenutexte +'",' +
         '"'+ datetexte +'",' +
-        ''+ idtheme +')',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : POST : /texte \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end();
-                    res.end(JSON.stringify(rows));
-                    console.log("200 : POST : /texte \n");
-                }
+        ''+ idtheme +')'
+            );
+
+        connection.query("SELECT idtexte FROM `texte` WHERE " +
+            "titretexte = '" + titretexte +"'AND " +
+            "contenutexte = '" + contenutexte +"' AND " +
+            "datetexte = '" + datetexte +"' AND " +
+            "idtheme = " + idtheme +" ;",
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.writeHead(401);
+                res.end();
+                console.log("401 : POST : /texte \n");
+            }
+            else {
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : POST : /texte \n");
+            }
         });
     });
 });
@@ -348,9 +354,8 @@ app.post("/commenter",function(req,res){
             req.connection.destroy();
     });
 
-    
-    req.on('end', function() {
 
+    req.on('end', function() {
         var post = qs.parse(body);
 
         idtheme = post['idtheme'];
@@ -368,14 +373,14 @@ app.post("/commenter",function(req,res){
         ''+ idtheme +',' +
         '"'+ emailtutilisateur +'",' +
         '"'+ commentaire +'",' +
-        '"'+ datecommentaire +'")', function(err, rows, fields) {
+        '"'+ datecommentaire +'")',
+            function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.writeHead(401);
                 res.end();
             }
             else {
                 res.writeHead(200);
-                res.end();
                 res.end(JSON.stringify(rows));
             }
         });
@@ -394,30 +399,51 @@ app.post("/image",function(req,res){
     var titreimage;
     var idtheme;
 
-    req.on('data', function(data) {
-        data = JSON.parse(data.toString());
-        pathimage = data.pathimage;
-        legendeimage = data.legendeimage;
-        titreimage = data.titreimage;
-        idtheme = data.idtheme;
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
     });
 
+
     req.on('end', function() {
+        var post = qs.parse(body);
+
+        pathimage = post['pathimage'];
+        console.log(pathimage);
+        legendeimage = post['legendeimage'];
+        console.log(legendeimage);
+        titreimage = post['titreimage'];
+        console.log(titreimage);
+        idtheme = post['idtheme'];
+        console.log(idtheme);
+
         connection.query('' +
-        'INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) ' +
+        'INSERT INTO `image`(`pathimage`, `legendeimage`, `titreimage`, `idtheme`) ' +
         'VALUES (' +
-        ''+ pathimage +'' +
-        ''+ legendeimage +'' +
-        ''+ titreimage +'' +
-        ''+ idtheme +'', function(err, rows, fields) {
+        '"'+ pathimage +'",' +
+        '"'+ legendeimage +'",' +
+        '"'+ titreimage +'",' +
+        ''+ idtheme +')');
+
+        connection.query("SELECT idimage FROM `image` WHERE " +
+            "pathimage = '" + pathimage +"' AND " +
+            "legendeimage = '" + legendeimage +"' AND " +
+            "titreimage = '" + titreimage +"' AND " +
+            "idtheme = " + idtheme +"",
+            function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.writeHead(401);
                 res.end();
+                console.log("401 : POST : /texte \n");
             }
             else {
                 res.writeHead(200);
-                res.end();
                 res.end(JSON.stringify(rows[0]));
+                console.log("200 : POST : /texte \n");
             }
         });
     });
@@ -427,21 +453,191 @@ app.post("/image",function(req,res){
  * Modification du texte
  * UPDATE `texte` SET `titretexte`=[value-2],`contenutexte`=[value-3] WHERE idtexte = ?
  */
+app.put("/texte",function(req,res){
+
+    var titretexte;
+    var contenutexte;
+    var datetexte;
+    var idtexte;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        titretexte = post['titretexte'];
+        console.log(titretexte);
+        contenutexte = post['contenutexte'];
+        console.log(contenutexte);
+        datetexte = post['datetexte'];
+        console.log(datetexte);
+        idtexte = post['idtexte'];
+        console.log(idtexte);
+
+        connection.query('UPDATE `texte` ' +
+            'SET `titretexte`='+ titretexte +',' +
+            '`contenutexte`= '+ contenutexte +' ' +
+            'WHERE idtexte = '+ idtexte +''
+        , function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : POST : /texte \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows));
+                    console.log("200 : POST : /texte \n");
+                }
+            });
+    });
+});
 
 /**
  * Modification de l'image
  * UPDATE `image` SET `pathimage`=[value-2],`legendeimage`=[value-3],`titreimage`=[value-5] WHERE idimage = ?
  */
+app.put("/image",function(req,res){
+
+    var pathimage;
+    var legendeimage;
+    var titreimage;
+    var idimage;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        pathimage = post['pathimage'];
+        console.log(pathimage);
+        legendeimage = post['legendeimage'];
+        console.log(legendeimage);
+        titreimage = post['titreimage'];
+        console.log(titreimage);
+        idimage = post['idimage'];
+        console.log(idimage);
+
+        connection.query('UPDATE `image` SET ' +
+        '`pathimage`= "'+ pathimage +'",' +
+        '`legendeimage`= "'+ legendeimage +'",' +
+        '`titreimage`= "'+ titreimage +'" ' +
+        'WHERE idimage = '+ idimage +'',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : POST : /texte \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : POST : /texte \n");
+                }
+            });
+    });
+});
 
 /**
  * Modification du nom du theme
  * UPDATE `theme` SET `nomtheme`=[value-2] WHERE idtheme = ?;
  */
+app.put("/image",function(req,res){
+
+    var nomtheme;
+    var idtheme;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        nomtheme = post['nomtheme'];
+        console.log(nomtheme);
+        idtheme = post['idtheme'];
+        console.log(idtheme);
+
+        connection.query('UPDATE `theme` SET ' +
+            '`nomtheme`= "'+ nomtheme +'" ' +
+            'WHERE idtheme = '+ idtheme +'',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : PUT : /texte \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : PUT : /texte \n");
+                }
+            });
+    });
+});
 
 /**
  * Suppression d'un texte
  * DELETE FROM `texte` WHERE idtexte = ?;
  */
+app.delete("/image",function(req,res){
+
+    var idtexte;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        nomtheme = post['idtexte'];
+        console.log(idtexte);
+
+        connection.query('DELETE FROM `texte` ' +
+            'WHERE idtexte = '+ idtexte +'',
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.writeHead(401);
+                    res.end();
+                    console.log("401 : DEL : /texte \n");
+                }
+                else {
+                    res.writeHead(200);
+                    res.end(JSON.stringify(rows[0]));
+                    console.log("200 : DEL : /texte \n");
+                }
+            });
+    });
+});
 
 /**
  * Suppression d'une image
