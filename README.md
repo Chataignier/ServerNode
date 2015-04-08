@@ -32,7 +32,8 @@ Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : **/utilisateur**
 Paramètre :
 * emailutilisateur 
 * motdepasse
-* nomcarnet  
+* nomcarnet
+
 Retour :
 * id du carnet.
 
@@ -41,6 +42,7 @@ Paramètre :
 * nomtheme
 * emailutilisateur
 * idcarnetvoyage  
+
 Retour :
 * id du theme
 
@@ -50,6 +52,7 @@ Paramètre :
 * contenutexte
 * datetexte
 * idtheme  
+
 Retour :
 * id du texte
 
@@ -59,6 +62,7 @@ Paramètre :
 * emailtutilisateur
 * commentaire
 * datecommentaire  
+
 Retour :
 * id commentaire
     
@@ -68,6 +72,7 @@ Paramètre :
 * emailtutilisateur
 * commentaire
 * datecommentaire  
+
 Retour :
 * id image
     
