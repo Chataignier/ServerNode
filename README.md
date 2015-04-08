@@ -2,10 +2,15 @@
 
 Server REST permettant d'accèder à la base de données, backend de notre application "Carnet de Voyage".
 
-Authentificate:
-==============
+Authentificate
+---------------
 
-Authentification avec un POST : paramètre (emailutilisateur, motdepasse). Retour d'un token à inclure dans les prochaines requètes.
+Authentification avec un POST : **/authenticate**
+ Paramètre : 
+ * emailutilisateur 
+ * motdepasse 
+ Retour
+ * token à inclure dans les prochaines requètes.
 
 GET : READ
 ----------
@@ -17,6 +22,7 @@ Retourne l'id et le nom du carnet du users :/carnet/email/:email (email utilisat
 
 
 POST : CREATE
+-------------
 Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : /utilisateur (emailutilisateur, motdepasse, nomcarnet) - Retourne l'id du carnet.
 
 Ajout d'un theme : /theme : var nomtheme;
@@ -42,6 +48,7 @@ var idtheme;
     
     
 PUT : UPDATE
+------------
 Modification du texte : /texte : var titretexte;
     var contenutexte;
     var datetexte;
@@ -58,7 +65,7 @@ var nomtheme;
 
 
 DELETE : DELETE
-
+---------------
 Suppression d'un texte : /texte : var idtexte;
 Suppression d'une image : /image :  var idimage
 Suppression d'un commentaire : /commenter :  var idtheme;
