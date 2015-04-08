@@ -6,9 +6,11 @@ Authentificate
 ---------------
 
 Authentification avec un POST : **/authenticate**
+
 Paramètre : 
  * emailutilisateur 
  * motdepasse 
+
 Retour :
  * token à inclure dans les prochaines requètes.
 
