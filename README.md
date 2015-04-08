@@ -8,18 +8,22 @@ Authentificate
 Authentification avec un POST : **/authenticate**  
 Paramètre : 
  * emailutilisateur 
- * motdepasse 
+ * motdepasse  
 
 Retour :
  * token à inclure dans les prochaines requètes.
 
 GET : READ
 ----------
-Retourne la liste des textes d'un theme : /themes/textes/id/:id (id du theme)
-Retourne la liste des images d'un theme : /themes/images/id/:id (id du theme)
-Retourne les commentaires du theme : /themes/commentaires/id/:id (id du theme)
-Retourne la liste des themes du carnet : /carnet/themes/id/:id (id du carnet)
-Retourne l'id et le nom du carnet du users :/carnet/email/:email (email utilisateur)
+Retourne la liste des textes d'un theme : **/themes/textes/id/:id** (id du theme)
+
+Retourne la liste des images d'un theme : **/themes/images/id/:id** (id du theme)
+
+Retourne les commentaires du theme : **/themes/commentaires/id/:id** (id du theme)
+
+Retourne la liste des themes du carnet : **/carnet/themes/id/:id** (id du carnet)
+
+Retourne l'id et le nom du carnet du users : **/carnet/email/:email** (email utilisateur)
 
 
 POST : CREATE
