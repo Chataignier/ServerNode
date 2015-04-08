@@ -6,10 +6,10 @@ Authentificate
 ---------------
 
 Authentification avec un POST : **/authenticate**
- Paramètre : 
+Paramètre : 
  * emailutilisateur 
  * motdepasse 
- Retour
+Retour :
  * token à inclure dans les prochaines requètes.
 
 GET : READ
