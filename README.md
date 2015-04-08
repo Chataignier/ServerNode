@@ -5,9 +5,7 @@ Server REST permettant d'accèder à la base de données, backend de notre appli
 Authentificate
 ---------------
 
-Authentification avec un POST : **/authenticate**
-
-Paramètre : 
+Authentification avec un POST : **/authenticate**  Paramètre : 
  * emailutilisateur 
  * motdepasse 
 
