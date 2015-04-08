@@ -17,11 +17,15 @@ GET : READ
 ----------
 Retourne la liste des textes d'un theme : **/themes/textes/id/:id** (id du theme)
 
+
 Retourne la liste des images d'un theme : **/themes/images/id/:id** (id du theme)
+
 
 Retourne les commentaires du theme : **/themes/commentaires/id/:id** (id du theme)
 
+
 Retourne la liste des themes du carnet : **/carnet/themes/id/:id** (id du carnet)
+
 
 Retourne l'id et le nom du carnet du users : **/carnet/email/:email** (email utilisateur)
 
@@ -37,6 +41,7 @@ Paramètre :
 Retour :
 * id du carnet.
 
+
 Ajout d'un theme : **/theme**  
 Paramètre : 
 * nomtheme
@@ -45,6 +50,7 @@ Paramètre :
 
 Retour :
 * id du theme
+
 
 Ajout d'un nouveau texte : **/texte**  
 Paramètre :
@@ -56,6 +62,7 @@ Paramètre :
 Retour :
 * id du texte
 
+
 Ajout d'un commentaire : **/commenter**  
 Paramètre :
 * idtheme
@@ -66,6 +73,7 @@ Paramètre :
 Retour :
 * id commentaire
     
+
 Ajout d'une nouvelle image : **/image**  
 Paramètre :
 * idtheme
@@ -86,6 +94,7 @@ Paramètre :
 * datetexte
 * idtexte
     
+
 Modification de l'image : **/image**  
 Paramètre :
 * pathimage
@@ -93,11 +102,11 @@ Paramètre :
 * titreimage
 * idimage
     
+
 Modification du nom du theme : **/theme**  
 Paramètre :
 * nomtheme
 * idtheme
-
 
 DELETE : DELETE
 ---------------
@@ -105,22 +114,23 @@ Suppression d'un texte : **/texte**
 Paramètre :
 * idtexte
 
+
 Suppression d'une image : **/image**  
 Paramètre :
 * idimage
+
 
 Suppression d'un commentaire : **/commenter**  
 Paramètre :
 * idtheme
 * emailutilisateur
     
+
 Suppression d'un theme : **/theme**  
 Paramètre :
 * idtheme
 
+
 Suppression d'un carnet : **/carnet**  
 Paramètre :
 * idcarnet
-
-
-
