@@ -216,7 +216,7 @@ app.get("/themes/images/nom/:id",function(req,res){
  * Retourne les commentaires du theme
  * SELECT * FROM `commenter` WHERE idtheme = ?;
  */
-app.get("/themes/commentaire/id/:id",function(req,res){
+app.get("/themes/commentaires/id/:id",function(req,res){
     var theme = req.params.id;
 
     connection.query(
@@ -241,7 +241,7 @@ app.get("/themes/commentaire/id/:id",function(req,res){
  * Retourne la liste des themes du carnet
  * SELECT * FROM `theme` WHERE idcarnetvoyage = ?;
  */
-app.get("/themes/id/:id",function(req,res){
+app.get("/carnet/themes/id/:id",function(req,res){
     var theme = req.params.id;
 
     connection.query(
@@ -266,7 +266,7 @@ app.get("/themes/id/:id",function(req,res){
  * Retourne l'id du carnet du users
  * SELECT idcarnetvoyage, nomcarnetvoyage FROM `carnetvoyage` WHERE emailutilisateur = ?;
  */
-app.get("/themes/email/:id",function(req,res){
+app.get("/carnet/email/:id",function(req,res){
     var email = req.params.id;
 
     connection.query(
