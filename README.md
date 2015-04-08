@@ -2,9 +2,13 @@
 
 Server REST permettant d'accèder à la base de données, backend de notre application "Carnet de Voyage".
 
+Authentificate:
+==============
+
 Authentification avec un POST : paramètre (emailutilisateur, motdepasse). Retour d'un token à inclure dans les prochaines requètes.
 
 GET : READ
+----------
 Retourne la liste des textes d'un theme : /themes/textes/id/:id (id du theme)
 Retourne la liste des images d'un theme : /themes/images/id/:id (id du theme)
 Retourne les commentaires du theme : /themes/commentaires/id/:id (id du theme)
