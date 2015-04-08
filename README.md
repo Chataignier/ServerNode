@@ -28,55 +28,94 @@ Retourne l'id et le nom du carnet du users : **/carnet/email/:email** (email uti
 
 POST : CREATE
 -------------
-Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : /utilisateur (emailutilisateur, motdepasse, nomcarnet) - Retourne l'id du carnet.
+Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : **/utilisateur**  
+Paramètre :
+* emailutilisateur 
+* motdepasse
+* nomcarnet  
+Retour :
+* id du carnet.
 
-Ajout d'un theme : /theme : var nomtheme;
-    var emailutilisateur;
-    var idcarnetvoyage = '';
+Ajout d'un theme : **/theme**  
+Paramètre : 
+* nomtheme
+* emailutilisateur
+* idcarnetvoyage  
+Retour :
+* id du theme
 
-Ajout d'un nouveau texte : /texte : var titretexte;
-    var contenutexte;
-    var datetexte;
-    var idtheme;
+Ajout d'un nouveau texte : **/texte**  
+Paramètre :
+* titretexte
+* contenutexte
+* datetexte
+* idtheme  
+Retour :
+* id du texte
 
-Ajout d'un commentaire : /commenter
-var idtheme;
-    var emailtutilisateur;
-    var commentaire;
-    var datecommentaire
+Ajout d'un commentaire : **/commenter**  
+Paramètre :
+* idtheme
+* emailtutilisateur
+* commentaire
+* datecommentaire  
+Retour :
+* id commentaire
     
-Ajout d'une nouvelle image : /image 
-var idtheme;
-    var emailtutilisateur;
-    var commentaire;
-    var datecommentaire
+Ajout d'une nouvelle image : **/image**  
+Paramètre :
+* idtheme
+* emailtutilisateur
+* commentaire
+* datecommentaire  
+Retour :
+* id image
     
     
 PUT : UPDATE
 ------------
-Modification du texte : /texte : var titretexte;
-    var contenutexte;
-    var datetexte;
-    var idtexte;
+Modification du texte : **/texte**  
+Paramètre :
+* titretexte
+* contenutexte
+* datetexte
+* idtexte
     
-Modification de l'image : /image : var pathimage;
-    var legendeimage;
-    var titreimage;
-    var idimage;
+Modification de l'image : **/image**  
+Paramètre :
+* pathimage
+* legendeimage
+* titreimage
+* idimage
     
-Modification du nom du theme : /theme
-var nomtheme;
-    var idtheme;
+Modification du nom du theme : **/theme**  
+Paramètre :
+* nomtheme
+* idtheme
 
 
 DELETE : DELETE
 ---------------
-Suppression d'un texte : /texte : var idtexte;
-Suppression d'une image : /image :  var idimage
-Suppression d'un commentaire : /commenter :  var idtheme;
-    var emailutilisateur;
-Suppression d'un theme : /theme : var idtheme
-Suppression d'un carnet : /carnet : var idcarnet
+Suppression d'un texte : **/texte**  
+Paramètre :
+* idtexte
+
+Suppression d'une image : **/image**  
+Paramètre :
+* idimage
+
+Suppression d'un commentaire : **/commenter**  
+Paramètre :
+* idtheme
+* emailutilisateur
+    
+Suppression d'un theme : **/theme**  
+Paramètre :
+* idtheme
+
+Suppression d'un carnet : **/carnet**  
+Paramètre :
+* idcarnet
 
 
 
