@@ -1,11 +1,15 @@
 # ServerNode
 
-Server REST permettant d'accèder à la base de données, backend de notre application "Carnet de Voyage".
+Server REST permettant d'accèder à la base de données, backend de notre application "Carnet de Voyage".  
+Executer dans un terminale "node mysql.js" 
+Une base de données MySQL "carnetvoyage" doit être creer. Importé ensuite sa structure (fichier carnetvoyage.sql)
+
 
 Authentificate
 ---------------
 
-###Authentification avec un POST : **/authenticate**  
+###Authentification avec un POST : 
+**/authenticate**  
 Paramètre : 
  * emailutilisateur 
  * motdepasse  
@@ -15,24 +19,30 @@ Retour :
 
 GET : READ
 ----------
-###Retourne la liste des textes d'un theme : **/themes/textes/id/:id** (id du theme)
+###Retourne la liste des textes d'un theme :
+**/themes/textes/id/:id** (id du theme)
 
 
-###Retourne la liste des images d'un theme : **/themes/images/id/:id** (id du theme)
+###Retourne la liste des images d'un theme : 
+**/themes/images/id/:id** (id du theme)
 
 
-###Retourne les commentaires du theme : **/themes/commentaires/id/:id** (id du theme)
+###Retourne les commentaires du theme : 
+**/themes/commentaires/id/:id** (id du theme)
 
 
-###Retourne la liste des themes du carnet : **/carnet/themes/id/:id** (id du carnet)
+###Retourne la liste des themes du carnet : 
+**/carnet/themes/id/:id** (id du carnet)
 
 
-###Retourne l'id et le nom du carnet du users : **/carnet/email/:email** (email utilisateur)
+###Retourne l'id et le nom du carnet du users : 
+**/carnet/email/:email** (email utilisateur)
 
 
 POST : CREATE
 -------------
-###Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : **/utilisateur**  
+###Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : 
+**/utilisateur**  
 Paramètre :
 * emailutilisateur 
 * motdepasse
@@ -42,7 +52,8 @@ Retour :
 * id du carnet.
 
 
-###Ajout d'un theme : **/theme**  
+###Ajout d'un theme : 
+**/theme**  
 Paramètre : 
 * nomtheme
 * emailutilisateur
@@ -52,7 +63,8 @@ Retour :
 * id du theme
 
 
-###Ajout d'un nouveau texte : **/texte**  
+###Ajout d'un nouveau texte : 
+**/texte**  
 Paramètre :
 * titretexte
 * contenutexte
@@ -63,7 +75,8 @@ Retour :
 * id du texte
 
 
-###Ajout d'un commentaire : **/commenter**  
+###Ajout d'un commentaire : 
+**/commenter**  
 Paramètre :
 * idtheme
 * emailtutilisateur
@@ -74,7 +87,8 @@ Retour :
 * id commentaire
     
 
-###Ajout d'une nouvelle image : **/image**  
+###Ajout d'une nouvelle image :
+**/image**  
 Paramètre :
 * idtheme
 * emailtutilisateur
@@ -87,7 +101,8 @@ Retour :
     
 PUT : UPDATE
 ------------
-###Modification du texte : **/texte**  
+###Modification du texte : 
+**/texte**  
 Paramètre :
 * titretexte
 * contenutexte
@@ -95,7 +110,8 @@ Paramètre :
 * idtexte
     
 
-###Modification de l'image : **/image**  
+###Modification de l'image : 
+**/image**  
 Paramètre :
 * pathimage
 * legendeimage
@@ -103,34 +119,40 @@ Paramètre :
 * idimage
     
 
-###Modification du nom du theme : **/theme**  
+###Modification du nom du theme : 
+**/theme**  
 Paramètre :
 * nomtheme
 * idtheme
 
 DELETE : DELETE
 ---------------
-###Suppression d'un texte : **/texte**  
+###Suppression d'un texte : 
+**/texte**  
 Paramètre :
 * idtexte
 
 
-###Suppression d'une image : **/image**  
+###Suppression d'une image : 
+**/image**  
 Paramètre :
 * idimage
 
 
-###Suppression d'un commentaire : **/commenter**  
+###Suppression d'un commentaire : 
+**/commenter**  
 Paramètre :
 * idtheme
 * emailutilisateur
     
 
-###Suppression d'un theme : **/theme**  
+###Suppression d'un theme : 
+**/theme**  
 Paramètre :
 * idtheme
 
 
-Suppression d'un carnet : **/carnet**  
+Suppression d'un carnet : 
+**/carnet**  
 Paramètre :
 * idcarnet
