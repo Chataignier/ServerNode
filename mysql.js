@@ -49,6 +49,7 @@ var connection = mysql.createConnection({
 
 /* Configuration */
 var app = express();
+var qs = require('querystring');
 
 
 app.use(function (req, res, next) {
@@ -78,6 +79,7 @@ app.post("/authenticate",function(req,res){
 
     var body = '';
     req.on('data', function(data) {
+
         body += data;
 
         // Too much POST data, kill the connection!
@@ -85,6 +87,8 @@ app.post("/authenticate",function(req,res){
             req.connection.destroy();
 
         var post = qs.parse(body);
+
+        console.log(post);
     });
 
     req.on('end', function() {
@@ -388,7 +392,7 @@ app.get("/utilisateurs/:idutilisateurs/carnet",function(req,res){
         });
 });
 
-var qs = require('querystring');
+
 
 /**
  * Ajout d'un utilisateur
