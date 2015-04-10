@@ -7,12 +7,12 @@
  *  - DELETE : suppression de champs (DELETE)
  *
  * Besoin :
- *  - GET : /users/:email
+ *  - GET : /utilisateurs/:email
  *          /carnets/:carnet/themes/:themes/textes                      Retourne la liste des textes d'un thème
  *          /carnets/:carnet/themes/:themes/images                      Retourne la liste des images d'un thème
  *          /carnets/:carnet/themes/:themes/commentaires                Retourne les commentaires du theme
  *          /carnets/:carnet/themes/:themes/                            Retourne la liste des themes du carnet
- *          /carnets/:carnet/                                           Retourne l'id du carnet du users
+ *          /carnets/:carnet/                                           Retourne l'id du carnet du utilisateurs
  *
  *  - POST: /carnets/:carnet/themes/:themes/textes                      Ajout d'un nouveau texte
  *          /carnets/:carnet/themes/:themes/images                      Ajout d'une nouvelle image
@@ -72,6 +72,9 @@ connection.connect(function(err){
 app.post("/authenticate",function(req,res){
     var emailutilisateur;
     var motdepasse;
+    var token;
+    var user;
+    var retour;
 
     var body = '';
     req.on('data', function(data) {
@@ -92,28 +95,144 @@ app.post("/authenticate",function(req,res){
         motdepasse = post['motdepasse'];
         console.log(motdepasse);
 
-        connection.query('SELECT * ' +
-        'FROM `utilisateur` ' +
-        'WHERE motdepasse = "'+ motdepasse +'" AND ' +
-        'emailutilisateur = "'+ emailutilisateur +'"', function(err, rows, fields) {
+        connection.query('SELECT `utilisateur`.emailutilisateur, `carnetvoyage`.idcarnetvoyage ' +
+        'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
+        'WHERE `utilisateur`.motdepasse = "'+ motdepasse +'" AND ' +
+        '`utilisateur`.emailutilisateur = "'+ emailutilisateur +'"', function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.writeHead(401);
                 res.end();
             }
             else {
-                res.writeHead(200);
-                res.end(JSON.stringify(rows[0].motdepasse));
+                user = ("user: "+JSON.stringify(rows[0])+"]");
+                console.log(user);
             }
         });
+
+        connection.query('SELECT `utilisateur`.token ' +
+        'FROM `utilisateur`' +
+        'WHERE `utilisateur`.motdepasse = "'+ motdepasse +'" AND ' +
+        '`utilisateur`.emailutilisateur = "'+ emailutilisateur +'"', function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.writeHead(500);
+                res.end();
+            }
+            else {
+                res.writeHead(200);
+                res.setHeader('Content-Type', 'application/json');
+                token = "[token: "+JSON.stringify(rows[0].token)+", ";
+                retour = token + user;
+                res.end(retour);
+            }
+        });
+
     });
+});
+
+/**
+ * Retourne un theme
+ * /carnets/:idCarnet/themes/:idTheme
+ */
+app.get("/carnets/:idCarnet/themes/:idTheme",function(req,res){
+    var idCarnet = req.params.idCarnet;
+    var idTheme = req.params.idTheme;
+
+    var nomTheme;
+    var textes;
+    var images;
+    var commentaires;
+    var retour;
+
+    /**
+     * Selection du theme
+     */
+    connection.query(
+        'SELECT nomtheme FROM `theme` ' +
+        'WHERE idtheme = ?',
+        [idTheme], function(err, rows, fields) {
+
+            if (err) {
+                res.writeHead(500);
+                res.end();
+                console.log("500 : GET : theme \n");
+            }
+            else {
+                nomTheme = rows[0].nomtheme;
+                console.log("200 : GET : theme \n");
+            }
+        });
+
+    /**
+     * Selection des textes
+     */
+    connection.query(
+        'SELECT idtexte, titretexte, contenutexte, datetexte FROM `texte` ' +
+        'WHERE idtheme = ?',
+        [idTheme], function(err, rows, fields) {
+            if (err) {
+                res.writeHead(500);
+                res.end();
+                console.log("500 : GET : textes \n");
+            }
+            else {
+                textes = JSON.stringify(rows);
+                console.log("200 : GET : textes \n");
+            }
+        });
+
+    /**
+     * Selection des images
+     */
+    connection.query(
+        'SELECT idimage, pathimage, legendeimage, titreimage FROM `image` ' +
+        'WHERE idtheme = ?',
+        [idTheme], function(err, rows, fields) {
+
+            if (err) {
+                res.writeHead(500);
+                res.end();
+                console.log("500 : GET : images \n");
+            }
+            else {
+                images = JSON.stringify(rows);
+                console.log("200 : GET : images \n");
+            }
+        });
+
+    /**
+     * Selection des commentaires
+     */
+    connection.query(
+        'SELECT idcommentaire, idtheme, emailutilisateur, commentaire, datecommentaire FROM `commenter` ' +
+        'WHERE idtheme = ?',
+        [idTheme], function(err, rows, fields) {
+
+            if (err) {
+                res.writeHead(500);
+                res.end();
+                console.log("500 : GET : commentaires \n");
+            }
+            else {
+                res.writeHead(200);
+                res.setHeader('Content-Type', 'application/json');
+                commentaires = JSON.stringify(rows);
+                retour = '{"theme":{"idtheme":'+idTheme+',' +
+                '"nomtheme":'+ nomTheme +',' +
+                '"textes":'+textes+',' +
+                '"images":'+images+',' +
+                '"commentaires":'+commentaires+'}}';
+                res.end(retour);
+                console.log("200 : GET : commentaires \n");
+            }
+        });
 });
 
 /**
  * Retourne la liste des textes d'un theme
  * paramètre id du theme
  */
-app.get("/themes/textes/id/:id",function(req,res){
-    var theme = req.params.id;
+app.get("/carnets/:idCarnet/themes/:idTheme/textes",function(req,res){
+    var theme = req.params.idTheme;
 
     connection.query(
         'SELECT idtexte, titretexte, contenutexte, datetext, `theme`.idtheme FROM `theme` ' +
@@ -124,38 +243,13 @@ app.get("/themes/textes/id/:id",function(req,res){
             if (err) {
                 res.writeHead(401);
                 res.end();
-                console.log("401 : GET : /users/carnet \n");
+                console.log("401 : GET : /utilisateurs/carnet \n");
             }
             else {
                 res.writeHead(200);
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
-            }
-        });
-});
-
-/**
- * Retourne la liste des textes d'un theme
- * paramètre nom du theme
- */
-app.get("/themes/textes/nom/:id",function(req,res){
-    var theme = req.params.id;
-
-    connection.query(
-        'SELECT idtexte, titretexte, contenutexte, datetext, `theme`.idtheme FROM `theme` ' +
-        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
-        'WHERE `theme`.nomtheme = ?',
-        [theme], function(err, rows, fields) {
-
-            if (err) {
-                res.writeHead(401);
-                res.end();
-                console.log("401 : GET : /users/carnet \n");
-            }
-            else {
-                res.writeHead(200);
-                res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
+                console.log("200 : GET : /utilisateurs/carnet \n");
             }
         });
 });
@@ -164,8 +258,8 @@ app.get("/themes/textes/nom/:id",function(req,res){
  * Retourne la liste des images d'un theme
  * id theme
  */
-app.get("/themes/images/id/:id",function(req,res){
-    var theme = req.params.id;
+app.get("/carnets/:idCarnet/themes/:idTheme/images",function(req,res){
+    var theme = req.params.idTheme;
 
     connection.query(
         'SELECT idimage, pathimage, legendeimage, titreimage, `theme`.idtheme FROM `theme` ' +
@@ -176,38 +270,13 @@ app.get("/themes/images/id/:id",function(req,res){
             if (err) {
                 res.writeHead(401);
                 res.end();
-                console.log("401 : GET : /users/carnet \n");
+                console.log("401 : GET : /utilisateurs/carnet \n");
             }
             else {
                 res.writeHead(200);
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
-            }
-        });
-});
-
-/**
- * Retourne la liste des images d'un theme
- * nom du theme
- */
-app.get("/themes/images/nom/:id",function(req,res){
-    var theme = req.params.id;
-
-    connection.query(
-        'SELECT idimage, pathimage, legendeimage, titreimage, `theme`.idtheme FROM `theme` ' +
-        'INNER JOIN `texte` ON `theme`.idtheme = `texte`.idtheme ' +
-        'WHERE `theme`.nomtheme = ?',
-        [theme], function(err, rows, fields) {
-
-            if (err) {
-                res.writeHead(401);
-                res.end();
-                console.log("401 : GET : /users/carnet \n");
-            }
-            else {
-                res.writeHead(200);
-                res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
+                console.log("200 : GET : /utilisateurs/carnet \n");
             }
         });
 });
@@ -216,8 +285,8 @@ app.get("/themes/images/nom/:id",function(req,res){
  * Retourne les commentaires du theme
  * SELECT * FROM `commenter` WHERE idtheme = ?;
  */
-app.get("/themes/commentaires/id/:id",function(req,res){
-    var theme = req.params.id;
+app.get("/carnets/:idCarnet/themes/:idTheme/commentaires",function(req,res){
+    var theme = req.params.idTheme;
 
     connection.query(
         'SELECT * ' +
@@ -227,12 +296,13 @@ app.get("/themes/commentaires/id/:id",function(req,res){
             if (err) {
                 res.writeHead(401);
                 res.end();
-                console.log("401 : GET : /users/carnet \n");
+                console.log("401 : GET : /utilisateurs/carnet \n");
             }
             else {
                 res.writeHead(200);
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
+                console.log("200 : GET : /utilisateurs/carnet \n");
             }
         });
 });
@@ -241,8 +311,9 @@ app.get("/themes/commentaires/id/:id",function(req,res){
  * Retourne la liste des themes du carnet
  * SELECT * FROM `theme` WHERE idcarnetvoyage = ?;
  */
-app.get("/carnet/themes/id/:id",function(req,res){
+app.get("/carnets/:id/themes",function(req,res){
     var theme = req.params.id;
+    var retour;
 
     connection.query(
         'SELECT * ' +
@@ -250,24 +321,27 @@ app.get("/carnet/themes/id/:id",function(req,res){
         'WHERE idcarnetvoyage = ?;',
         [theme], function(err, rows, fields) {
             if (err) {
-                res.writeHead(401);
+                res.writeHead(500);
                 res.end();
-                console.log("401 : GET : /users/carnet \n");
+                console.log("500 : GET : /utilisateurs/carnet \n");
             }
             else {
+                res.setHeader('Content-Type', 'application/json');
                 res.writeHead(200);
-                res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
+
+                retour = '{"themes":'+JSON.stringify(rows)+'}';
+                res.end(retour);
+                console.log("200 : GET : /utilisateurs/carnet \n");
             }
         });
 });
 
 /**
- * Retourne l'id du carnet du users
+ * Retourne l'id du carnet du utilisateurs
  * SELECT idcarnetvoyage, nomcarnetvoyage FROM `carnetvoyage` WHERE emailutilisateur = ?;
  */
-app.get("/carnet/email/:id",function(req,res){
-    var email = req.params.id;
+app.get("/utilisateurs/:idutilisateurs/carnet",function(req,res){
+    var email = req.params.idutilisateurs;
 
     connection.query(
         'SELECT idcarnetvoyage, nomcarnetvoyage ' +
@@ -275,14 +349,15 @@ app.get("/carnet/email/:id",function(req,res){
         'WHERE emailutilisateur = ?;',
         [email], function(err, rows, fields) {
             if (err) {
-                res.writeHead(401);
+                res.writeHead(500);
                 res.end();
-                console.log("401 : GET : /users/carnet \n");
+                console.log("401 : GET : /utilisateurs/carnet \n");
             }
             else {
                 res.writeHead(200);
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(rows));
-                console.log("200 : GET : /users/carnet \n");
+                console.log("200 : GET : /utilisateurs/carnet \n");
             }
         });
 });
@@ -290,13 +365,13 @@ app.get("/carnet/email/:id",function(req,res){
 var qs = require('querystring');
 
 /**
- * Ajout d'un utilisateur/carnet
+ * Ajout d'un utilisateur
  */
-app.post("/utilisateur",function(req,res){
+app.post("/utilisateurs/:idUser",function(req,res){
 
-    var emailutilisateur;
+    var emailutilisateur = req.params.idUser;
     var motdepasse;
-    var nomcarnet;
+    var retour;
 
     var body = '';
     req.on('data', function (data) {
@@ -310,18 +385,55 @@ app.post("/utilisateur",function(req,res){
     req.on('end', function() {
         var post = qs.parse(body);
 
-        emailutilisateur = post['emailutilisateur'];
         console.log(emailutilisateur);
         motdepasse = post['motdepasse'];
         console.log(motdepasse);
-        nomcarnet = post['nomcarnet'];
-        console.log(nomcarnet);
 
         connection.query('INSERT INTO `utilisateur`(`emailutilisateur`, `motdepasse`) ' +
             'VALUES (' +
             '"'+ emailutilisateur +'",' +
-            '"'+ motdepasse +'")'
-        );
+            '"'+ motdepasse +'")',
+        function(err, rows, fields) {
+                if (err) {
+                    res.writeHead(500);
+                    res.end();
+                    console.log(err.toString());
+                }
+                else {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.writeHead(200);
+                    retour = '{"utilisateur":[{"emailutilisateur":"'+emailutilisateur+'"}]}';
+                    res.end(retour);
+                    console.log("200 : POST : /carnet \n");
+                }
+            });
+    });
+});
+
+/**
+ * Ajout d'un carnet
+ */
+app.post("/users/:idUser/carnet",function(req,res){
+
+    var emailutilisateur = req.params.idUser;
+    var nomcarnet;
+    var retour;
+
+    var body = '';
+    req.on('data', function (data) {
+        body += data;
+
+        // Too much POST data, kill the connection!
+        if (body.length > 1e6)
+            req.connection.destroy();
+    });
+
+    req.on('end', function() {
+        var post = qs.parse(body);
+
+        console.log(emailutilisateur);
+        nomcarnet = post['nomcarnet'];
+        console.log(nomcarnet);
 
         connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
             'VALUES (' +
@@ -329,17 +441,19 @@ app.post("/utilisateur",function(req,res){
             '"'+ emailutilisateur +'")'
         );
 
-        connection.query("SELECT idcarnetvoyage FROM `carnetvoyage` WHERE " +
+        connection.query("SELECT * FROM `carnetvoyage` WHERE " +
             "emailutilisateur = '" + emailutilisateur +"';",
             function(err, rows, fields) {
                 if (err || rows.length == 0) {
-                    res.writeHead(401);
+                    res.writeHead(500);
                     res.end();
-                    console.log("401 : POST : /carnet \n");
+                    console.log("500 : POST : /carnet \n");
                 }
                 else {
+                    res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
-                    res.end(JSON.stringify(rows));
+                    retour = '{"carnets":'+JSON.stringify(rows)+'}';
+                    res.end(retour);
                     console.log("200 : POST : /carnet \n");
                 }
             });
@@ -350,11 +464,11 @@ app.post("/utilisateur",function(req,res){
 /**
  * Ajout d'un theme
  */
-app.post("/theme",function(req,res){
+app.post("/carnets/:idCarnet/theme",function(req,res){
 
+    var idcarnetvoyage = req.params.idCarnet;
     var nomtheme;
-    var emailutilisateur;
-    var idcarnetvoyage = '';
+    var retour;
 
 
     var body = '';
@@ -364,22 +478,6 @@ app.post("/theme",function(req,res){
         // Too much POST data, kill the connection!
         if (body.length > 1e6)
             req.connection.destroy();
-
-        var post = qs.parse(body);
-
-        /*connection.query('SELECT idcarnetvoyage ' +
-            'FROM `carnetvoyage` ' +
-            'WHERE emailutilisateur = "'+  post['emailutilisateur'] +'"',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : POST : /theme \n");
-                }
-                else {
-                    idcarnetvoyage = rows[0].idcarnetvoyage;
-                }
-            });*/
     });
 
 
@@ -387,9 +485,6 @@ app.post("/theme",function(req,res){
         var post = qs.parse(body);
 
         nomtheme = post['nomtheme'];
-        emailutilisateur = post['emailutilisateur'];
-        idcarnetvoyage = post['idcarnetvoyage'];
-
         console.log(nomtheme);
         console.log(idcarnetvoyage);
 
@@ -399,18 +494,20 @@ app.post("/theme",function(req,res){
             ''+ idcarnetvoyage +')'
         );
 
-        connection.query("SELECT idtheme FROM `theme` WHERE " +
+        connection.query("SELECT * FROM `theme` WHERE " +
             "nomtheme = '" + nomtheme +"' AND " +
             "idcarnetvoyage = " + idcarnetvoyage +" ;",
             function(err, rows, fields) {
                 if (err || rows.length == 0) {
-                    res.writeHead(401);
+                    res.writeHead(500);
                     res.end();
-                    console.log("401 : POST : /theme \n");
+                    console.log("500 : POST : /theme \n");
                 }
                 else {
+                    res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
-                    res.end(JSON.stringify(rows));
+                    retour = '{"themes":'+JSON.stringify(rows)+'}';
+                    res.end(retour);
                     console.log("200 : POST : /theme \n");
                 }
             });
@@ -421,12 +518,13 @@ app.post("/theme",function(req,res){
  * Ajout d'un nouveau texte
  * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/texte",function(req,res){
+app.post("/carnets/:idCarnet/themes/:idTheme/texte",function(req,res){
 
     var titretexte;
     var contenutexte;
     var datetexte;
-    var idtheme;
+    var retour;
+    var idtheme = req.params.idTheme;
 
     var body = '';
     req.on('data', function (data) {
@@ -446,7 +544,6 @@ app.post("/texte",function(req,res){
         console.log(contenutexte);
         datetexte = post['datetexte'];
         console.log(datetexte);
-        idtheme = post['idtheme'];
         console.log(idtheme);
 
         connection.query('' +
@@ -458,20 +555,22 @@ app.post("/texte",function(req,res){
         ''+ idtheme +')'
             );
 
-        connection.query("SELECT idtexte FROM `texte` WHERE " +
+        connection.query("SELECT * FROM `texte` WHERE " +
             "titretexte = '" + titretexte +"'AND " +
             "contenutexte = '" + contenutexte +"' AND " +
             "datetexte = '" + datetexte +"' AND " +
             "idtheme = " + idtheme +" ;",
         function(err, rows, fields) {
             if (err || rows.length == 0) {
-                res.writeHead(401);
+                res.writeHead(500);
                 res.end();
-                console.log("401 : POST : /texte \n");
+                console.log("500 : POST : /texte \n");
             }
             else {
+                res.setHeader('Content-Type', 'application/json');
                 res.writeHead(200);
-                res.end(JSON.stringify(rows));
+                retour = '{"textes":'+JSON.stringify(rows)+'}';
+                res.end(retour);
                 console.log("200 : POST : /texte \n");
             }
         });
@@ -482,9 +581,9 @@ app.post("/texte",function(req,res){
  * Ajout d'un commentaire sur le theme
  * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
-app.post("/commenter",function(req,res){
+app.post("/carnets/:idCarnet/themes/:idTheme/commenter",function(req,res){
 
-    var idtheme;
+    var idtheme = req.params.idTheme;
     var emailtutilisateur;
     var commentaire;
     var datecommentaire;
@@ -502,7 +601,6 @@ app.post("/commenter",function(req,res){
     req.on('end', function() {
         var post = qs.parse(body);
 
-        idtheme = post['idtheme'];
         console.log(idtheme);
         emailtutilisateur = post['emailtutilisateur'];
         console.log(emailtutilisateur);
@@ -517,15 +615,25 @@ app.post("/commenter",function(req,res){
         ''+ idtheme +',' +
         '"'+ emailtutilisateur +'",' +
         '"'+ commentaire +'",' +
-        '"'+ datecommentaire +'")',
+        '"'+ datecommentaire +'")');
+
+        connection.query("SELECT * FROM `commenter` WHERE " +
+            "emailutilisateur = '" + emailtutilisateur +"' AND " +
+            "commentaire = '" + commentaire +"' AND " +
+            "datecommentaire = '" + datecommentaire +"' AND " +
+            "idtheme = " + idtheme +" ;",
             function(err, rows, fields) {
             if (err || rows.length == 0) {
-                res.writeHead(401);
+                res.writeHead(500);
                 res.end();
+                console.log("500 : POST : /com \n");
             }
             else {
+                res.setHeader('Content-Type', 'application/json');
                 res.writeHead(200);
-                res.end(JSON.stringify(rows));
+                retour = '{"commentaires":'+JSON.stringify(rows)+'}';
+                res.end(retour);
+                console.log("200 : POST : /com \n");
             }
         });
     });
@@ -536,12 +644,12 @@ app.post("/commenter",function(req,res){
  * Ajout d'une nouvelle image
  * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/image",function(req,res){
+app.post("/carnets/:idCarnet/themes/:idTheme/image",function(req,res){
 
     var pathimage;
     var legendeimage;
     var titreimage;
-    var idtheme;
+    var idtheme = req.params.idTheme;
 
     var body = '';
     req.on('data', function (data) {
@@ -552,7 +660,6 @@ app.post("/image",function(req,res){
             req.connection.destroy();
     });
 
-
     req.on('end', function() {
         var post = qs.parse(body);
 
@@ -562,7 +669,6 @@ app.post("/image",function(req,res){
         console.log(legendeimage);
         titreimage = post['titreimage'];
         console.log(titreimage);
-        idtheme = post['idtheme'];
         console.log(idtheme);
 
         connection.query('' +
@@ -573,21 +679,23 @@ app.post("/image",function(req,res){
         '"'+ titreimage +'",' +
         ''+ idtheme +')');
 
-        connection.query("SELECT idimage FROM `image` WHERE " +
+        connection.query("SELECT * FROM `image` WHERE " +
             "pathimage = '" + pathimage +"' AND " +
             "legendeimage = '" + legendeimage +"' AND " +
             "titreimage = '" + titreimage +"' AND " +
             "idtheme = " + idtheme +"",
             function(err, rows, fields) {
             if (err || rows.length == 0) {
-                res.writeHead(401);
+                res.writeHead(500);
                 res.end();
-                console.log("401 : POST : /texte \n");
+                console.log("500 : POST : /img \n");
             }
             else {
+                res.setHeader('Content-Type', 'application/json');
                 res.writeHead(200);
-                res.end(JSON.stringify(rows[0]));
-                console.log("200 : POST : /texte \n");
+                retour = '{"images":'+JSON.stringify(rows)+'}';
+                res.end(retour);
+                console.log("200 : POST : /img \n");
             }
         });
     });
@@ -597,12 +705,12 @@ app.post("/image",function(req,res){
  * Modification du texte
  * UPDATE `texte` SET `titretexte`=[value-2],`contenutexte`=[value-3] WHERE idtexte = ?
  */
-app.put("/texte",function(req,res){
+app.put("/carnets/:idCarnet/themes/:idTheme/texte/:idTexte",function(req,res){
 
     var titretexte;
     var contenutexte;
     var datetexte;
-    var idtexte;
+    var idtexte = req.params.idTexte;
 
     var body = '';
     req.on('data', function (data) {
@@ -622,23 +730,26 @@ app.put("/texte",function(req,res){
         console.log(contenutexte);
         datetexte = post['datetexte'];
         console.log(datetexte);
-        idtexte = post['idtexte'];
         console.log(idtexte);
 
         connection.query('UPDATE `texte` ' +
             'SET `titretexte`= "'+ titretexte +'",' +
             '`contenutexte`= "'+ contenutexte +'" ' +
-            'WHERE idtexte = '+ idtexte +''
-        , function(err, rows, fields) {
+            'WHERE idtexte = '+ idtexte +'');
+
+        connection.query("SELECT * FROM `texte` WHERE " +
+        "idtexte = " + idtexte +" ;",function(err, rows, fields) {
                 if (err || rows.length == 0) {
-                    res.writeHead(401);
+                    res.writeHead(500);
                     res.end();
-                    console.log("401 : POST : /texte \n");
+                    console.log("500 : PUT : /texte \n");
                 }
                 else {
+                    res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
-                    res.end(JSON.stringify(rows));
-                    console.log("200 : POST : /texte \n");
+                    retour = '{"textes":'+JSON.stringify(rows)+'}';
+                    res.end(retour);
+                    console.log("200 : PUT : /texte \n");
                 }
             });
     });
@@ -648,12 +759,12 @@ app.put("/texte",function(req,res){
  * Modification de l'image
  * UPDATE `image` SET `pathimage`=[value-2],`legendeimage`=[value-3],`titreimage`=[value-5] WHERE idimage = ?
  */
-app.put("/image",function(req,res){
+app.put("/carnets/:idCarnet/themes/:idTheme/images/:idImage",function(req,res){
 
     var pathimage;
     var legendeimage;
     var titreimage;
-    var idimage;
+    var idimage = req.params.idImage;
 
     var body = '';
     req.on('data', function (data) {
@@ -674,14 +785,16 @@ app.put("/image",function(req,res){
         console.log(legendeimage);
         titreimage = post['titreimage'];
         console.log(titreimage);
-        idimage = post['idimage'];
         console.log(idimage);
 
         connection.query('UPDATE `image` SET ' +
         '`pathimage`= "'+ pathimage +'",' +
         '`legendeimage`= "'+ legendeimage +'",' +
         '`titreimage`= "'+ titreimage +'" ' +
-        'WHERE idimage = '+ idimage +'',
+        'WHERE idimage = '+ idimage +'');
+
+            connection.query("SELECT * FROM `image` WHERE " +
+                "idimage = " + idimage +" ;",
             function(err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.writeHead(401);
@@ -689,9 +802,11 @@ app.put("/image",function(req,res){
                     console.log("401 : POST : /texte \n");
                 }
                 else {
+                    res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : POST : /texte \n");
+                    retour = '{"images":'+JSON.stringify(rows)+'}';
+                    res.end(retour);
+                    console.log("200 : POST : /image \n");
                 }
             });
     });
@@ -701,10 +816,10 @@ app.put("/image",function(req,res){
  * Modification du nom du theme
  * UPDATE `theme` SET `nomtheme`=[value-2] WHERE idtheme = ?;
  */
-app.put("/theme",function(req,res){
+app.put("/carnets/:idCarnet/themes/:idTheme",function(req,res){
 
     var nomtheme;
-    var idtheme;
+    var idtheme = req.params.idTheme;
 
     var body = '';
     req.on('data', function (data) {
@@ -721,24 +836,28 @@ app.put("/theme",function(req,res){
 
         nomtheme = post['nomtheme'];
         console.log(nomtheme);
-        idtheme = post['idtheme'];
         console.log(idtheme);
 
         connection.query('UPDATE `theme` SET ' +
             '`nomtheme`= "'+ nomtheme +'" ' +
-            'WHERE idtheme = '+ idtheme +'',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : PUT : /texte \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : PUT : /texte \n");
-                }
-            });
+            'WHERE idtheme = '+ idtheme +'');
+
+            connection.query("SELECT * FROM `theme` WHERE " +
+                "idtheme = " + idtheme +" ;",
+                function(err, rows, fields) {
+                    if (err || rows.length == 0) {
+                        res.writeHead(500);
+                        res.end();
+                        console.log("500 : PUT : /texte \n");
+                    }
+                    else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.writeHead(200);
+                        retour = '{"themes":'+JSON.stringify(rows)+'}';
+                        res.end(retour);
+                        console.log("200 : PUT : /theme \n");
+                    }
+                });
     });
 });
 
@@ -951,7 +1070,7 @@ app.delete("/carnet",function(req,res){
     });
 });
 
-app.get("/users",function(req,res){
+app.get("/utilisateurs",function(req,res){
     connection.query('SELECT * from utilisateur LIMIT 2', function(err, rows, fields) {
         connection.end();
         if (!err)
@@ -962,9 +1081,9 @@ app.get("/users",function(req,res){
 });
 
 /**
- * Liste des Users
+ * Liste des utilisateurs
  */
-app.get("/users",function(req,res){
+app.get("/utilisateurs",function(req,res){
     connection.query('SELECT * from utilisateur LIMIT 2', function(err, rows, fields) {
         connection.end();
         if (!err)
