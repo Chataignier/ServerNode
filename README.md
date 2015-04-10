@@ -8,7 +8,7 @@ Une base de données MySQL "carnetvoyage" doit être creer. Importé ensuite sa 
 Authentificate
 ---------------
 
-###Authentification avec un POST : 
+###Authentification avec un POST -check: 
 **/authenticate**  
 Paramètre : 
  * emailutilisateur 
@@ -20,28 +20,28 @@ Retour :
 
 GET : READ
 ----------
-###Retourne la liste des themes du carnet
+###Retourne la liste des themes du carnet -check
 **/carnets/:idCarnet/themes**
 
-##Retourne le contenu d'un theme
+##Retourne le contenu d'un theme -check
 **/carnets/:idCarnet/themes/:idTheme**
 
-###Retourne la liste des textes d'un theme :
+###Retourne la liste des textes d'un theme -check:
 **/carnets/:idCarnet/themes/:idTheme/textes** (id du theme)
 
-###Retourne la liste des images d'un theme : 
+###Retourne la liste des images d'un theme -check: 
 **/carnets/:idCarnet/themes/:idTheme/images** (id du theme)
 
-###Retourne les commentaires du theme : 
+###Retourne les commentaires du theme -check: 
 **/carnets/:idCarnet/themes/:idTheme/commentaires** (id du theme)
 
-###Retourne l'id et le nom du carnet du users : 
+###Retourne l'id et le nom du carnet du users -check: 
 **/users/:idUsers/carnet** (email utilisateur)
 
 
 POST : CREATE
 -------------
-###Ajout d'un utilisateur : 
+###Ajout d'un utilisateur -check: 
 **/users/:idUser**  
 Paramètre :
 * emailutilisateur 
@@ -51,10 +51,10 @@ Paramètre :
 Retour :
 * id du carnet.
 
-###Ajout d'un carnet
-**/users/:idUser/carnet
+###Ajout d'un carnet -check
+**/users/:idUser/carnet**
 
-###Ajout d'un theme : 
+###Ajout d'un theme -check : 
 **/carnets/:idCarnet/theme**  
 Paramètre : 
 * nomtheme
