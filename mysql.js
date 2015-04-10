@@ -104,7 +104,7 @@ app.post("/authenticate",function(req,res){
                 res.end();
             }
             else {
-                user = ("user: "+JSON.stringify(rows[0])+"]");
+                user = ('"user":['+JSON.stringify(rows[0])+']');
                 console.log(user);
             }
         });
@@ -118,10 +118,11 @@ app.post("/authenticate",function(req,res){
                 res.end();
             }
             else {
-                res.writeHead(200);
                 res.setHeader('Content-Type', 'application/json');
-                token = "[token: "+JSON.stringify(rows[0].token)+", ";
-                retour = token + user;
+                res.writeHead(200);
+
+                token = '["token":'+JSON.stringify(rows[0].token)+',';
+                retour = '{"auth":'+token + user+']}';
                 res.end(retour);
             }
         });
