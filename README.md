@@ -16,33 +16,33 @@ Paramètre :
 
 Retour :
  * token à inclure dans les prochaines requètes.
+ * users avec (email, idcarnetvoyage)
 
 GET : READ
 ----------
-###Retourne la liste des textes d'un theme :
-**/themes/textes/id/:id** (id du theme)
+###Retourne la liste des themes du carnet
+**/carnets/:idCarnet/themes**
 
+##Retourne le contenu d'un theme
+**/carnets/:idCarnet/themes/:idTheme**
+
+###Retourne la liste des textes d'un theme :
+**/carnets/:idCarnet/themes/:idTheme/textes** (id du theme)
 
 ###Retourne la liste des images d'un theme : 
-**/themes/images/id/:id** (id du theme)
-
+**/carnets/:idCarnet/themes/:idTheme/images** (id du theme)
 
 ###Retourne les commentaires du theme : 
-**/themes/commentaires/id/:id** (id du theme)
-
-
-###Retourne la liste des themes du carnet : 
-**/carnet/themes/id/:id** (id du carnet)
-
+**/carnets/:idCarnet/themes/:idTheme/commentaires** (id du theme)
 
 ###Retourne l'id et le nom du carnet du users : 
-**/carnet/email/:email** (email utilisateur)
+**/users/:idUsers/carnet** (email utilisateur)
 
 
 POST : CREATE
 -------------
-###Ajout d'un utilisateur et d'un carnet lié à l'utilisateur : 
-**/utilisateur**  
+###Ajout d'un utilisateur : 
+**/users/:idUser**  
 Paramètre :
 * emailutilisateur 
 * motdepasse
@@ -51,9 +51,11 @@ Paramètre :
 Retour :
 * id du carnet.
 
+###Ajout d'un carnet
+**/users/:idUser/carnet
 
 ###Ajout d'un theme : 
-**/theme**  
+**/carnets/:idCarnet/theme**  
 Paramètre : 
 * nomtheme
 * emailutilisateur
@@ -64,7 +66,7 @@ Retour :
 
 
 ###Ajout d'un nouveau texte : 
-**/texte**  
+**/carnets/:idCarnet/themes/:idTheme/texte**  
 Paramètre :
 * titretexte
 * contenutexte
@@ -76,7 +78,7 @@ Retour :
 
 
 ###Ajout d'un commentaire : 
-**/commenter**  
+**/carnets/:idCarnet/themes/:idTheme/commenter**  
 Paramètre :
 * idtheme
 * emailtutilisateur
@@ -88,7 +90,7 @@ Retour :
     
 
 ###Ajout d'une nouvelle image :
-**/image**  
+**/carnets/:idCarnet/themes/:idTheme/image**  
 Paramètre :
 * idtheme
 * emailtutilisateur
@@ -102,7 +104,7 @@ Retour :
 PUT : UPDATE
 ------------
 ###Modification du texte : 
-**/texte**  
+**/carnets/:idCarnet/themes/:idTheme/texte/:idTexte**  
 Paramètre :
 * titretexte
 * contenutexte
@@ -111,7 +113,7 @@ Paramètre :
     
 
 ###Modification de l'image : 
-**/image**  
+**/carnets/:idCarnet/themes/:idTheme/images/:idImage**  
 Paramètre :
 * pathimage
 * legendeimage
@@ -120,7 +122,7 @@ Paramètre :
     
 
 ###Modification du nom du theme : 
-**/theme**  
+**/carnets/:idCarnet/themes/:idTheme**  
 Paramètre :
 * nomtheme
 * idtheme
@@ -128,31 +130,31 @@ Paramètre :
 DELETE : DELETE
 ---------------
 ###Suppression d'un texte : 
-**/texte**  
+**/carnets/:idCarnet/themes/:idTheme/textes/:idTexte**  
 Paramètre :
 * idtexte
 
 
 ###Suppression d'une image : 
-**/image**  
+**/carnets/:idCarnet/themes/:idTheme/images/:idImage**  
 Paramètre :
 * idimage
 
 
 ###Suppression d'un commentaire : 
-**/commenter**  
+**/carnets/:idCarnet/themes/:idTheme/commentaire/:idCommentaire**  
 Paramètre :
 * idtheme
 * emailutilisateur
     
 
 ###Suppression d'un theme : 
-**/theme**  
+**/carnets/:idCarnet/themes/:idTheme**  
 Paramètre :
 * idtheme
 
 
 Suppression d'un carnet : 
-**/carnet**  
+**/carnets/:idCarnet**  
 Paramètre :
 * idcarnet
