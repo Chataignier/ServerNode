@@ -65,7 +65,7 @@ Retour :
 * id du theme
 
 
-###Ajout d'un nouveau texte : 
+###Ajout d'un nouveau texte --check: 
 **/carnets/:idCarnet/themes/:idTheme/texte**  
 Paramètre :
 * titretexte
@@ -77,7 +77,7 @@ Retour :
 * id du texte
 
 
-###Ajout d'un commentaire : 
+###Ajout d'un commentaire -check: 
 **/carnets/:idCarnet/themes/:idTheme/commenter**  
 Paramètre :
 * idtheme
@@ -89,7 +89,7 @@ Retour :
 * id commentaire
     
 
-###Ajout d'une nouvelle image :
+###Ajout d'une nouvelle image --chekc :
 **/carnets/:idCarnet/themes/:idTheme/image**  
 Paramètre :
 * idtheme
