@@ -213,16 +213,41 @@ app.get("/carnets/:idCarnet/themes/:idTheme",function(req,res){
                 console.log("500 : GET : commentaires \n");
             }
             else {
-                res.writeHead(200);
                 res.setHeader('Content-Type', 'application/json');
+                res.writeHead(200);
                 commentaires = JSON.stringify(rows);
                 retour = '{"theme":{"idtheme":'+idTheme+',' +
-                '"nomtheme":'+ nomTheme +',' +
+                '"nomtheme":"'+ nomTheme +'",' +
                 '"textes":'+textes+',' +
                 '"images":'+images+',' +
                 '"commentaires":'+commentaires+'}}';
                 res.end(retour);
                 console.log("200 : GET : commentaires \n");
+            }
+        });
+});
+
+/**
+ * Retourne la liste de carnet
+ *
+ */
+app.get("/carnets",function(req,res){
+    var theme = req.params.idTheme;
+
+    connection.query(
+        'SELECT * FROM `carnetvoyage`',
+        [theme], function(err, rows, fields) {
+
+            if (err) {
+                res.writeHead(500);
+                res.end();
+                console.log("500 : GET : /carnet \n");
+            }
+            else {
+                res.setHeader('Content-Type', 'application/json');
+                res.writeHead(200);
+                res.end(JSON.stringify(rows));
+                console.log("200 : GET : /carnet \n");
             }
         });
 });
