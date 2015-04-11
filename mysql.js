@@ -96,22 +96,19 @@ app.post("/authenticate", jsonParser, function(req,res){
  */
 app.post("/logout", jsonParser, function(req,res){
     if(req.body && req.body.email) {
-        connection.query('SELECT `utilisateur`.emailutilisateur, `utilisateur`.token, `carnetvoyage`.idcarnetvoyage ' +
-        'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
-        'WHERE `utilisateur`.motdepasse = "'+ req.body.password +'" AND ' +
-        '`utilisateur`.emailutilisateur = "'+ req.body.email +'"', function(err, rows, fields) {
-            if (err || rows.length == 0 || rows.length >= 2) {
+        connection.query('UPDATE `utilisateur` SET `token`= null WHERE emailutilisateur = "'+ req.body.email +'"', function(err, rows, fields) {
+            if (err) {
                 res.sendStatus(500);
-            }
-            else {
-                res.json(rows);
+                console.log("logout 500");
+            }else{
+                res.sendStatus(200);
+                console.log("logout 200");
             }
         });
     } else {
         res.sendStatus(400);
+        console.log("logout 500");
     }
-
-
 });
 
 /**
@@ -360,10 +357,10 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
                     console.log("500 : POST : /utilsateur/");
                 }
                 else {
-                    res.setHeader('Content-Type', 'application/json');
+                    /*res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
                     res.end('{{"emailutilisateur":"'+req.params.idUser+'"}');
-                    console.log("200 : POST : /utilisateur \n");
+                    console.log("200 : POST : /utilisateur \n");*/
                 }
             });
 
@@ -387,8 +384,10 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
                         console.log("500 : POST : /carnet \n");
                     }
                     else {
-                        res.json(rows);
-                        console.log("200 : POST : /carnet \n");
+                        res.setHeader('Content-Type', 'application/json');
+                        res.writeHead(200);
+                        res.end('{"emailutilisateur":"'+req.params.idUser+'"}');
+                        console.log("200 : POST : /utilisateur \n");
                     }
                 });
 
@@ -401,7 +400,7 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
 /**
  * Ajout d'un carnet
  */
-app.post("/users/:idUser/carnet",function(req,res){
+app.post("/users/:idUser/carnet", jsonParser,function(req,res){
 
     if(req.body && req.body.token &&req.body.carnet) {
 
@@ -445,7 +444,7 @@ app.post("/users/:idUser/carnet",function(req,res){
 /**
  * Ajout d'un theme
  */
-app.post("/carnets/:idCarnet/theme",function(req,res){
+app.post("/carnets/:idCarnet/theme", jsonParser,function(req,res){
     if(req.body && req.body.token &&req.body.theme) {
 
         //Verification Token
@@ -480,7 +479,7 @@ app.post("/carnets/:idCarnet/theme",function(req,res){
  * Ajout d'un nouveau texte
  * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/carnets/:idCarnet/themes/:idTheme/texte",function(req,res){
+app.post("/carnets/:idCarnet/themes/:idTheme/texte", jsonParser,function(req,res){
 
     if(req.body && req.body.token) {
 
@@ -520,7 +519,7 @@ app.post("/carnets/:idCarnet/themes/:idTheme/texte",function(req,res){
  * Ajout d'un commentaire sur le theme
  * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
-app.post("/carnets/:idCarnet/themes/:idTheme/commenter",function(req,res){
+app.post("/carnets/:idCarnet/themes/:idTheme/commenter", jsonParser,function(req,res){
 
     if(req.body && req.body.email) {
 
@@ -560,61 +559,40 @@ app.post("/carnets/:idCarnet/themes/:idTheme/commenter",function(req,res){
  * Ajout d'une nouvelle image
  * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/carnets/:idCarnet/themes/:idTheme/image",function(req,res){
+app.post("/carnets/:idCarnet/themes/:idTheme/image", jsonParser,function(req,res){
 
-    var pathimage;
-    var legendeimage;
-    var titreimage;
-    var idtheme = req.params.idTheme;
+    if(req.body && req.body.token) {
 
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
+        //Verification
 
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
 
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        pathimage = post['pathimage'];
-        console.log(pathimage);
-        legendeimage = post['legendeimage'];
-        console.log(legendeimage);
-        titreimage = post['titreimage'];
-        console.log(titreimage);
-        console.log(idtheme);
-
+        //Execution
         connection.query('' +
         'INSERT INTO `image`(`pathimage`, `legendeimage`, `titreimage`, `idtheme`) ' +
         'VALUES (' +
-        '"'+ pathimage +'",' +
-        '"'+ legendeimage +'",' +
-        '"'+ titreimage +'",' +
-        ''+ idtheme +')');
+        '"'+ req.body.path +'",' +
+        '"'+ req.body.legende +'",' +
+        '"'+ req.body.titre +'",' +
+        ''+ req.params.idTheme +')');
 
         connection.query("SELECT * FROM `image` WHERE " +
-            "pathimage = '" + pathimage +"' AND " +
-            "legendeimage = '" + legendeimage +"' AND " +
-            "titreimage = '" + titreimage +"' AND " +
-            "idtheme = " + idtheme +"",
+            "pathimage = '" + req.body.path +"' AND " +
+            "legendeimage = '" + req.body.legende +"' AND " +
+            "titreimage = '" + req.body.titre +"' AND " +
+            "idtheme = " + req.body.idTheme +"",
             function(err, rows, fields) {
-            if (err || rows.length == 0) {
-                res.writeHead(500);
-                res.end();
-                console.log("500 : POST : /img \n");
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.writeHead(200);
-                retour = '{"images":'+JSON.stringify(rows)+'}';
-                res.end(retour);
-                console.log("200 : POST : /img \n");
-            }
-        });
-    });
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /img \n");
+                }
+                else {
+                    res.json(rows);
+                    console.log("200 : POST : /img \n");
+                }
+            });
+    } else {
+        res.sendStatus(400);
+    }
 });
 
 
