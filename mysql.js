@@ -114,8 +114,16 @@ app.post("/logout", jsonParser, function(req,res){
 /**
  * Verif token
  */
-/*function verificationToken(var email, var password){
-}*/
+function verificationToken(email, token){
+    connection.query('SELECT * FROM `utilisateur` WHERE emailutilisateur = "'+email+'" AND token = "'+token+'"', function(err, rows, fields) {
+        if (err || rows.length == 0) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    });
+}
 
 //GET
 
@@ -402,9 +410,10 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
  */
 app.post("/users/:idUser/carnet", jsonParser,function(req,res){
 
-    if(req.body && req.body.token &&req.body.carnet) {
+    //console.log(verificationToken(req.params.idUser, req.body.token));
 
-        //Verification du token
+    if(req.body && /*verificationToken(req.params.idUser, req.body.token) &&*/ req.body.carnet) {
+
         connection.query("SELECT * FROM `utilisateur` WHERE " +
             "emailutilisateur = '" + req.params.email +"' AND " +
             "token = '"+req.body.token+"';",
@@ -419,11 +428,11 @@ app.post("/users/:idUser/carnet", jsonParser,function(req,res){
         connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
             'VALUES (' +
             '"'+ req.body.carnet +'",' +
-            '"'+ req.params.email +'")'
+            '"'+ req.params.idUser +'")'
         );
 
         connection.query("SELECT * FROM `carnetvoyage` WHERE " +
-            "emailutilisateur = '" + req.params.email +"';",
+            "emailutilisateur = '" + req.params.idUser +"';",
             function(err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -600,162 +609,93 @@ app.post("/carnets/:idCarnet/themes/:idTheme/image", jsonParser,function(req,res
 
 /**
  * Modification du texte
- * UPDATE `texte` SET `titretexte`=[value-2],`contenutexte`=[value-3] WHERE idtexte = ?
+ *
  */
-app.put("/carnets/:idCarnet/themes/:idTheme/texte/:idTexte",function(req,res){
+app.put("/carnets/:idCarnet/themes/:idTheme/texte/:idTexte", jsonParser, function(req,res){
+    if(req.body) {
 
-    var titretexte;
-    var contenutexte;
-    var datetexte;
-    var idtexte = req.params.idTexte;
+        //VerifToken
 
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        titretexte = post['titretexte'];
-        console.log(titretexte);
-        contenutexte = post['contenutexte'];
-        console.log(contenutexte);
-        datetexte = post['datetexte'];
-        console.log(datetexte);
-        console.log(idtexte);
-
+        //Execution
         connection.query('UPDATE `texte` ' +
-            'SET `titretexte`= "'+ titretexte +'",' +
-            '`contenutexte`= "'+ contenutexte +'" ' +
-            'WHERE idtexte = '+ idtexte +'');
+        'SET `titretexte`= "'+ req.body.titre +'",' +
+        '`contenutexte`= "'+ req.body.contenu +'" ' +
+        'WHERE idtexte = '+ req.params.idTexte +'');
 
         connection.query("SELECT * FROM `texte` WHERE " +
-        "idtexte = " + idtexte +" ;",function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(500);
-                    res.end();
-                    console.log("500 : PUT : /texte \n");
-                }
-                else {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.writeHead(200);
-                    retour = '{"textes":'+JSON.stringify(rows)+'}';
-                    res.end(retour);
-                    console.log("200 : PUT : /texte \n");
-                }
-            });
-    });
+        "idtexte = " + req.params.idTexte +" ;",function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : PUT : /texte \n");
+            }
+            else {
+                res.json(rows);
+                console.log("200 : PUT : /texte \n");
+            }
+        });
+    }
+    else {
+        res.sendStatus(400);
+    }
 });
 
 /**
  * Modification de l'image
- * UPDATE `image` SET `pathimage`=[value-2],`legendeimage`=[value-3],`titreimage`=[value-5] WHERE idimage = ?
+ *
  */
-app.put("/carnets/:idCarnet/themes/:idTheme/images/:idImage",function(req,res){
+app.put("/carnets/:idCarnet/themes/:idTheme/images/:idImage", jsonParser, function(req,res){
 
-    var pathimage;
-    var legendeimage;
-    var titreimage;
-    var idimage = req.params.idImage;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        pathimage = post['pathimage'];
-        console.log(pathimage);
-        legendeimage = post['legendeimage'];
-        console.log(legendeimage);
-        titreimage = post['titreimage'];
-        console.log(titreimage);
-        console.log(idimage);
-
+    if(req.body) {
         connection.query('UPDATE `image` SET ' +
-        '`pathimage`= "'+ pathimage +'",' +
-        '`legendeimage`= "'+ legendeimage +'",' +
-        '`titreimage`= "'+ titreimage +'" ' +
-        'WHERE idimage = '+ idimage +'');
+        '`pathimage`= "'+ req.body.path +'",' +
+        '`legendeimage`= "'+ req.body.legende +'",' +
+        '`titreimage`= "'+ req.body.titre +'" ' +
+        'WHERE idimage = '+ req.params.idImage +'');
 
-            connection.query("SELECT * FROM `image` WHERE " +
-                "idimage = " + idimage +" ;",
+        connection.query("SELECT * FROM `image` WHERE " +
+            "idimage = " + req.params.idImage +" ;",
             function(err, rows, fields) {
                 if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : POST : /texte \n");
+                    res.sendStatus(500);
+                    console.log("500 : POST : /texte \n");
                 }
                 else {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.writeHead(200);
-                    retour = '{"images":'+JSON.stringify(rows)+'}';
-                    res.end(retour);
+                    res.json(rows);
                     console.log("200 : POST : /image \n");
                 }
             });
-    });
+    }
+    else {
+        res.sendStatus(400);
+    }
 });
 
 /**
  * Modification du nom du theme
  * UPDATE `theme` SET `nomtheme`=[value-2] WHERE idtheme = ?;
  */
-app.put("/carnets/:idCarnet/themes/:idTheme",function(req,res){
+app.put("/carnets/:idCarnet/themes/:idTheme", jsonParser, function(req,res){
 
-    var nomtheme;
-    var idtheme = req.params.idTheme;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        nomtheme = post['nomtheme'];
-        console.log(nomtheme);
-        console.log(idtheme);
-
+    if(req.body && req.body.theme) {
         connection.query('UPDATE `theme` SET ' +
-            '`nomtheme`= "'+ nomtheme +'" ' +
-            'WHERE idtheme = '+ idtheme +'');
+        '`nomtheme`= "'+ req.body.theme +'" ' +
+        'WHERE idtheme = '+ req.params.idTheme +'');
 
-            connection.query("SELECT * FROM `theme` WHERE " +
-                "idtheme = " + idtheme +" ;",
-                function(err, rows, fields) {
-                    if (err || rows.length == 0) {
-                        res.writeHead(500);
-                        res.end();
-                        console.log("500 : PUT : /texte \n");
-                    }
-                    else {
-                        res.setHeader('Content-Type', 'application/json');
-                        res.writeHead(200);
-                        retour = '{"themes":'+JSON.stringify(rows)+'}';
-                        res.end(retour);
-                        console.log("200 : PUT : /theme \n");
-                    }
-                });
-    });
+        connection.query("SELECT * FROM `theme` WHERE " +
+            "idtheme = " + req.params.idTheme +" ;",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : PUT : /texte \n");
+                }
+                else {
+                    res.json(rows);
+                    console.log("200 : PUT : /theme \n");
+                }
+            });
+    } else {
+        res.sendStatus(400);
+    }
 });
 
 
@@ -765,209 +705,95 @@ app.put("/carnets/:idCarnet/themes/:idTheme",function(req,res){
  * Suppression d'un texte
  * DELETE FROM `texte` WHERE idtexte = ?;
  */
-app.delete("/texte",function(req,res){
-
-    var idtexte;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        idtexte = post['idtexte'];
-        console.log(idtexte);
-
-        connection.query('DELETE FROM `texte` ' +
-            'WHERE idtexte = '+ idtexte +'',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : DEL : /texte \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : DEL : /texte \n");
-                }
-            });
-    });
+app.delete("/carnets/:idCarnet/themes/:idTheme/textes/:idTexte", jsonParser, function(req,res){
+    connection.query('DELETE FROM `texte` ' +
+        'WHERE idtexte = '+ req.params.idTexte +'',
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : DEL : /texte \n");
+            }
+            else {
+                res.sendStatus(200);
+                console.log("200 : DEL : /texte \n");
+            }
+        });
 });
 
 /**
  * Suppression d'une image
  * DELETE FROM `image` WHERE idimage = ?;
  */
-app.delete("/image",function(req,res){
-
-    var idimage;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        idimage = post['idimage'];
-        console.log(idimage);
-
-        connection.query('DELETE FROM `image` ' +
-            'WHERE idimage = '+ idimage +'',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : DEL : /texte \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : DEL : /texte \n");
-                }
-            });
-    });
+app.delete("/carnets/:idCarnet/themes/:idTheme/images/:idImage", jsonParser, function(req,res){
+    connection.query('DELETE FROM `image` ' +
+        'WHERE idimage = '+ req.params.idImage +'',
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : DEL : /texte \n");
+            }
+            else {
+                res.sendStatus(200);
+                console.log("200 : DEL : /texte \n");
+            }
+        });
 });
 
 /**
  * Suppression d'un commentaire
  * DELETE FROM `commenter` WHERE idtheme = ? AND emailutilisateur = ?;
  */
-app.delete("/commenter",function(req,res){
-
-    var idtheme;
-    var emailutilisateur;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        idtheme = post['idtheme'];
-        console.log(idtheme);
-        emailutilisateur = post['emailutilisateur'];
-        console.log(emailutilisateur);
-
-        connection.query('DELETE FROM `commenter` ' +
-            'WHERE idtheme = '+ idtheme +'' +
-            'AND emailutilisateur = "'+ emailutilisateur +'"',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : DEL : /commenter \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : DEL : /commenter \n");
-                }
-            });
-    });
+app.delete("/carnets/:idCarnet/themes/:idTheme/commentaire/:idCommentaire", jsonParser, function(req,res){
+    connection.query('DELETE FROM `commenter` ' +
+        'WHERE idcommentaire = '+ req.params.idCommentaire +'',
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : DEL : /commenter \n");
+            }
+            else {
+                res.sendStatus(200);
+                console.log("200 : DEL : /commenter \n");
+            }
+        });
 });
 
 /**
  * Suppression d'un theme
  * DELETE FROM `theme` WHERE idtheme = ?;
  */
-app.delete("/theme",function(req,res){
-
-    var idtheme;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        idtheme = post['idtheme'];
-        console.log(idtheme);
-
-        connection.query('DELETE FROM `theme` ' +
-            'WHERE idtheme = '+ idtheme +'',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : DEL : /commenter \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : DEL : /commenter \n");
-                }
-            });
-    });
+app.delete("/carnets/:idCarnet/themes/:idTheme", jsonParser, function(req,res){
+    connection.query('DELETE FROM `theme` ' +
+        'WHERE idtheme = '+ req.params.idTheme +'',
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : DEL : /commenter \n");
+            }
+            else {
+                res.sendStatus(200);
+                console.log("200 : DEL : /commenter \n");
+            }
+        });
 });
 
 /**
  * Suppression d'un carnet
  * DELETE FROM `carnetvoyage` WHERE idcarnetvoyage = ?;
  */
-app.delete("/carnet",function(req,res){
-
-    var idcarnet;
-
-    var body = '';
-    req.on('data', function (data) {
-        body += data;
-
-        // Too much POST data, kill the connection!
-        if (body.length > 1e6)
-            req.connection.destroy();
-    });
-
-
-    req.on('end', function() {
-        var post = qs.parse(body);
-
-        idcarnet = post['idcarnet'];
-        console.log(idcarnet);
-
-        connection.query('DELETE FROM `carnetvoyage` ' +
-            'WHERE idcarnetvoyage = '+ idcarnet +'',
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.writeHead(401);
-                    res.end();
-                    console.log("401 : DEL : /carnet \n");
-                }
-                else {
-                    res.writeHead(200);
-                    res.end(JSON.stringify(rows[0]));
-                    console.log("200 : DEL : /carnet \n");
-                }
-            });
-    });
+app.delete("/carnets/:idCarnet", jsonParser, function(req,res){
+    connection.query('DELETE FROM `carnetvoyage` ' +
+        'WHERE idcarnetvoyage = '+ req.params.idCarnet +'',
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : DEL : /carnet \n");
+            }
+            else {
+                res.sendStatus(200);
+                console.log("200 : DEL : /carnet \n");
+            }
+        });
 });
 
 
