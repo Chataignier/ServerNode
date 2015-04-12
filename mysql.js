@@ -83,7 +83,7 @@ app.post("/authenticate", jsonParser, function(req,res){
                 res.sendStatus(500);
             }
             else {
-                res.json(rows);
+                res.json(rows[0]);
             }
         });
     } else {
@@ -342,12 +342,38 @@ app.get("/utilisateurs/:idUtilisateurs/carnet", jsonParser, function(req,res){
                 console.log("500 : GET : /utilisateurs/carnet \n");
             }
             else {
-                res.json(rows);
+                res.json(rows[0]);
                 console.log("200 : GET : /utilisateurs/carnet \n");
             }
         });
 });
 
+/**
+ * Retourne un utilisateur
+ */
+app.get("/utilisateurs/:idUtilisateur", jsonParser, function(req,res){
+    var email = req.params.idUtilisateurs;
+
+    connection.query(
+        'SELECT * ' +
+        'FROM `utilisateur` ' +
+        'WHERE emailutilisateur = ?;',
+        [email], function(err, rows, fields) {
+            if (err) {
+                res.sendStatus(500);
+                console.log("500 : GET : /utilisateurs \n");
+            } else {
+                if (rows.length == 0) {
+                    res.sendStatus(204);
+                    console.log("pas de donnée");
+                }
+                else {
+                    res.json(rows[0]);
+                    console.log("200 : GET : /utilisateurs/carnet \n");
+                }
+        }
+        });
+});
 
 //POST
 
@@ -358,10 +384,11 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
     var user;
 
     if(req.body && req.body.password){
-        connection.query('INSERT INTO `utilisateur`(`emailutilisateur`, `motdepasse`) ' +
+        connection.query('INSERT INTO `utilisateur`(`emailutilisateur`, `motdepasse`, `token`) ' +
             'VALUES (' +
             '"'+ req.params.idUser +'",' +
-            '"'+ req.body.password +'")',
+            '"'+ req.body.password +'",' +
+            '"token")',
             function(err, rows, fields) {
                 if (err) {
                     res.sendStatus(500);
@@ -394,7 +421,7 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
                     else {
                         res.setHeader('Content-Type', 'application/json');
                         res.writeHead(200);
-                        res.end('{"utilisateur":'+user+',"carnetvoyage":'+JSON.stringify(rows)+'}');
+                        res.end('{"utilisateur":'+user+',"carnetvoyage":'+JSON.stringify(rows[0])+'}');
                         console.log("200 : POST : /utilisateur \n");
                     }
                 });
@@ -414,7 +441,7 @@ app.post("/users/:idUser/carnet", jsonParser,function(req,res){
 
     if(req.body && /*verificationToken(req.params.idUser, req.body.token) &&*/ req.body.carnet) {
 
-        connection.query("SELECT * FROM `utilisateur` WHERE " +
+        /*connection.query("SELECT * FROM `utilisateur` WHERE " +
             "emailutilisateur = '" + req.params.idUser +"' AND " +
             "token = '"+req.body.token+"';",
             function(err, rows, fields) {
@@ -422,7 +449,7 @@ app.post("/users/:idUser/carnet", jsonParser,function(req,res){
                     res.sendStatus(500);
                     console.log("500 : POST : /carnet \n");
                 }
-            });
+            });*/
 
         //Execution
         connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
@@ -439,7 +466,7 @@ app.post("/users/:idUser/carnet", jsonParser,function(req,res){
                     console.log("500 : POST : /carnet \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : POST : /carnet \n");
                 }
             });
@@ -474,7 +501,7 @@ app.post("/carnets/:idCarnet/theme", jsonParser,function(req,res){
                     console.log("500 : POST : /theme \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : POST : /theme \n");
                 }
             });
@@ -514,7 +541,7 @@ app.post("/carnets/:idCarnet/themes/:idTheme/texte", jsonParser,function(req,res
                     console.log("500 : POST : /texte \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : POST : /texte \n");
                 }
             });
@@ -553,7 +580,7 @@ app.post("/carnets/:idCarnet/themes/:idTheme/commenter", jsonParser,function(req
                     console.log("500 : POST : /com \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : POST : /com \n");
                 }
             });
@@ -594,7 +621,7 @@ app.post("/carnets/:idCarnet/themes/:idTheme/image", jsonParser,function(req,res
                     console.log("500 : POST : /img \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : POST : /img \n");
                 }
             });
@@ -628,7 +655,7 @@ app.put("/carnets/:idCarnet/themes/:idTheme/texte/:idTexte", jsonParser, functio
                 console.log("500 : PUT : /texte \n");
             }
             else {
-                res.json(rows);
+                res.json(rows[0]);
                 console.log("200 : PUT : /texte \n");
             }
         });
@@ -659,7 +686,7 @@ app.put("/carnets/:idCarnet/themes/:idTheme/images/:idImage", jsonParser, functi
                     console.log("500 : POST : /texte \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : POST : /image \n");
                 }
             });
@@ -688,7 +715,7 @@ app.put("/carnets/:idCarnet/themes/:idTheme", jsonParser, function(req,res){
                     console.log("500 : PUT : /texte \n");
                 }
                 else {
-                    res.json(rows);
+                    res.json(rows[0]);
                     console.log("200 : PUT : /theme \n");
                 }
             });
@@ -793,32 +820,6 @@ app.delete("/carnets/:idCarnet", jsonParser, function(req,res){
                 console.log("200 : DEL : /carnet \n");
             }
         });
-});
-
-
-//A revoir
-
-app.get("/utilisateures",function(req,res){
-    connection.query('SELECT * from utilisateur LIMIT 2', function(err, rows, fields) {
-        connection.end();
-        if (!err)
-            console.log('The solution is: ', rows);
-        else
-            console.log('Error while performing Query.');
-    });
-});
-
-/**
- * Liste des utilisateurs
- */
-app.get("/utilisateurs",function(req,res){
-    connection.query('SELECT * from utilisateur LIMIT 2', function(err, rows, fields) {
-        connection.end();
-        if (!err)
-            console.log('The solution is: ', rows);
-        else
-            console.log('Error while performing Query.');
-    });
 });
 
 app.listen(3000);
