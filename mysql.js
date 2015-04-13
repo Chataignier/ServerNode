@@ -224,11 +224,11 @@ app.get("/carnets/:idCarnet/themes/:idTheme", jsonParser, function(req,res){
                 res.setHeader('Content-Type', 'application/json');
                 res.writeHead(200);
                 commentaires = JSON.stringify(rows);
-                retour = '{"theme":{"idtheme":'+idTheme+',' +
+                retour = '{"idtheme":'+idTheme+',' +
                 '"nomtheme":"'+ nomTheme +'",' +
                 '"textes":'+textes+',' +
                 '"images":'+images+',' +
-                '"commentaires":'+commentaires+'}}';
+                '"commentaires":'+commentaires+'}';
                 res.end(retour);
                 console.log("200 : GET : commentaires \n");
             }
