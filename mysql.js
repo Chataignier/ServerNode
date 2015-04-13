@@ -38,8 +38,10 @@
 var express    = require("express");
 var mysql      = require('mysql');
 var http       = require('http');
+var fs = require('fs');
 var bodyParser = require('body-parser');
 var url = require('url');
+var multer = require('multer');
 
 var connection = mysql.createConnection({
     host     : 'localhost',
@@ -50,7 +52,24 @@ var connection = mysql.createConnection({
 
 /* Configuration */
 var app = express();
+var done = false;
+
+
+/*app.use(multer({ dest: './uploads/',
+    rename: function (fieldname, filename) {
+        return filename+Date.now();
+    },
+    onFileUploadStart: function (file) {
+        console.log(file.originalname + ' is starting ...')
+    },
+    onFileUploadComplete: function (file) {
+        console.log(file.fieldname + ' uploaded to  ' + file.path)
+        done=true;
+    }
+}));*/
+
 app.set('json spaces', 0);
+
 var qs = require('querystring');
 
 var jsonParser = bodyParser.json();
@@ -375,6 +394,13 @@ app.get("/utilisateurs/:idUtilisateur", jsonParser, function(req,res){
         });
 });
 
+app.get("/uploads/:idCarnet/:idTheme/:id", jsonParser, function(req,res){
+    var img = fs.readFileSync('uploads/'+req.params.idCarnet+'/'+req.params.idTheme+'/'+req.params.id);
+    res.writeHead(200, {'Content-Type': 'image/*' });
+    res.end(img, 'binary');
+});
+
+
 //POST
 
 /**
@@ -594,7 +620,7 @@ app.post("/carnets/:idCarnet/themes/:idTheme/commenter", jsonParser,function(req
  * Ajout d'une nouvelle image
  * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/carnets/:idCarnet/themes/:idTheme/image", jsonParser,function(req,res){
+/*app.post("/carnets/:idCarnet/themes/:idTheme/imag", jsonParser,function(req,res){
 
     if(req.body && req.body.token) {
 
@@ -627,6 +653,69 @@ app.post("/carnets/:idCarnet/themes/:idTheme/image", jsonParser,function(req,res
             });
     } else {
         res.sendStatus(400);
+    }
+});*/
+
+/**
+ * Ajout d'une nouvelle image
+ * idcarnet, idtheme, images, legende
+ */
+app.post('/carnets/:idCarnet/themes/:idTheme/image', jsonParser, multer({
+    dest: 'uploads/',
+    rename: function (fieldname, filename) {
+        return filename+Date.now();
+
+    },
+    changeDest: function(dest, req, res) {
+        var newDestination = dest + req.params.idCarnet + "/" + req.params.idTheme;
+        var stat = null;
+        try {
+            stat = fs.statSync(newDestination);
+            console.log("newDest");
+        } catch (err) {
+            fs.mkdirSync(dest + req.params.idCarnet);
+            fs.mkdirSync(dest + req.params.idCarnet + "/" + req.params.idTheme);
+        }
+        if (stat && !stat.isDirectory()) {
+            throw new Error('Directory cannot be created because an inode of a different type exists at "' + dest + '"');
+        }
+        return newDestination
+    }
+
+}), function(req, res) {
+    if(req.body) {
+
+        //Verification
+        //console.log(req.files.file.name);
+
+        //Execution
+        connection.query('' +
+        'INSERT INTO `image`(`pathimage`, `legendeimage`, `titreimage`, `idtheme`) ' +
+        'VALUES (' +
+        '"/uploads/'+ req.params.idCarnet+ '/'+ req.params.idTheme +'/'+ req.files.file.name +'",' +
+        '"'+ req.body.legende +'",' +
+        '"'+ req.files.file.name +'",' +
+        ''+ req.params.idTheme +')');
+
+        connection.query("SELECT * FROM `image` WHERE " +
+            /*"pathimage = '" + req.body.path +"' AND " +*/
+            "legendeimage = '" + req.body.legende +"' AND " +
+            "titreimage = '" + req.files.file.name +"' AND " +
+            "idtheme = " + req.params.idTheme +"",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /img \n");
+                }
+                else {
+                    res.json(rows[0]);
+                    console.log("200 : POST : /img \n");
+                }
+            });
+    }
+    else {
+        res.sendStatus(400);
+        console.log("400 : POST : /img \n");
     }
 });
 
