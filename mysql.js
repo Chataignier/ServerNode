@@ -840,8 +840,22 @@ app.delete("/carnets/:idCarnet/themes/:idTheme/textes/:idTexte", jsonParser, fun
  * DELETE FROM `image` WHERE idimage = ?;
  */
 app.delete("/carnets/:idCarnet/themes/:idTheme/images/:idImage", jsonParser, function(req,res){
+
+    /*console.log(req.params.idCarnet);
+    console.log(req.params.idTheme);
+    console.log(req.params.idImage);*/
+    //fs.remove("upload/"+req.params.idCarnet+"/"+req.params.idTheme+"/"+req.params.idImage+"");
+
+    /*fs.unlink("upload/"+req.params.idCarnet+"/"+req.params.idTheme+"/"+req.params.idImage+"", function(err) {
+        if(err) {
+            console.log(err);
+        } else {
+            console.log("Deleted the old markdown file : oldPath ");
+        }
+    });*/
+
     connection.query('DELETE FROM `image` ' +
-        'WHERE idimage = '+ req.params.idImage +'',
+        'WHERE titreimage = "'+ req.params.idImage +'"',
         function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
