@@ -429,7 +429,7 @@ app.post("/utilisateurs/:idUser", jsonParser,function(req,res){
         if(req.body.carnet) {
             nomCarnet = req.body.carnet;
         } else {
-            nomCarnet = "Default";
+            nomCarnet = "Carnet"+req.params.idUser;
         }
             connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
                 'VALUES (' +
