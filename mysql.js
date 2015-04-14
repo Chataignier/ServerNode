@@ -42,6 +42,7 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var url = require('url');
 var multer = require('multer');
+var basepath = "http://localhost:3000";
 
 var connection = mysql.createConnection({
     host     : 'localhost',
@@ -646,7 +647,7 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commenter", jsonParser,functi
  * Ajout d'une nouvelle image
  * idcarnetvoyage, idtheme, images, legende
  */
-app.post('/carnets/:idcarnetvoyage/themes/:idtheme/image', jsonParser, multer({
+app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
     dest: 'uploads/',
     rename: function (fieldname, filename) {
         return filename+Date.now();
@@ -669,16 +670,16 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/image', jsonParser, multer({
     }
 
 }), function(req, res) {
-    if(req.body) {
+    if(req.body && req.files) {
 
-        //Verification
+         //Verification
         //console.log(req.files.file.name);
 
         //Execution
         connection.query('' +
         'INSERT INTO `image`(`pathimage`, `legendeimage`, `titreimage`, `idtheme`) ' +
         'VALUES (' +
-        '"/uploads/'+ req.params.idcarnetvoyage+ '/'+ req.params.idtheme +'/'+ req.files.file.name +'",' +
+        ''+ basepath +'"/uploads/'+ req.params.idcarnetvoyage+ '/'+ req.params.idtheme +'/'+ req.files.file.name +'",' +
         '"'+ req.body.legendeimage +'",' +
         '"'+ req.files.file.name +'",' +
         ''+ req.params.idtheme +')');
