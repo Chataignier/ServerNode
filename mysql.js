@@ -75,10 +75,8 @@ connection.connect(function(err){
     }
 });
 
-
-/**
+ /**
  * Connexion avec motdepasse
- *
  * @method /connexion
  * @param {String} emailutilisateur
  * @param {String} motdepasse
@@ -94,7 +92,7 @@ app.post("/connexion", jsonParser, function(req,res){
         //Insertion du token dans la base
         connection.query('UPDATE `utilisateur` ' +
         'SET `token`= "'+ token +'" ' +
-        'WHERE `emailutilisateur` = "'+ req.body.emailutilisateur +'" AND `motdepasse` = "'+req.body.motdepasse+'"', function(err, rows, fields) {
+        'WHERE `emailutilisateur` = "'+ req.body.emailutilisateur +'" AND `motdepasse` = "'+ req.body.motdepasse +'"', function(err, rows, fields) {
             if (err) {
                 console.log("500 : Insert : authenticate");
                 res.sendStatus(500);
@@ -122,12 +120,12 @@ app.post("/connexion", jsonParser, function(req,res){
 /**
  * Connexion avec token
  *
- * @method /connexiontoken
+ * @method /authentification
  * @param {String} emailutilisateur
  * @param {String} token
  * @return {JSON} {"emailutilsateur":"", "token":"", "idcarnetvoyage":""}
  */
-app.post("/connexiontoken", jsonParser, function(req,res){
+app.post("/authentification", jsonParser, function(req,res){
     if(req.body && req.body.emailutilisateur && req.body.token) {
 
         //Retour
@@ -149,8 +147,7 @@ app.post("/connexiontoken", jsonParser, function(req,res){
 });
 
 /**
- * Deconnexion
- *
+ * Deconnexion *
  * @method /deconnexion
  * @param {String} emailutilisateur
  * @return {200} return 200 on success
@@ -174,7 +171,6 @@ app.post("/deconnexion", jsonParser, function(req,res){
 
 /**
  * Email Exists
- *
  * @method /exists/utilisateur/:emailutilisateur
  * @return {200} return 200 on success
  */
@@ -384,8 +380,8 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, fun
  * @method /carnets/:idtheme/themes
  * @return {JSON} themes
  */
-app.get("/carnets/:idtheme/themes", jsonParser, function(req,res){
-    var theme = req.params.idtheme;
+app.get("/carnets/:idcarnet/themes", jsonParser, function(req,res){
+    var theme = req.params.idcarnet;
 
     connection.query(
         'SELECT * ' +
@@ -477,7 +473,6 @@ app.get("/uploads/:idcarnetvoyage/:idtheme/:idimage", jsonParser, function(req,r
  * Ajout d'un utilisateur
  *
  * @method /utilisateurs/:emailutilisateur
- * @param {String} token
  * @param {String} motdepasse
  * @param {String} nomcarnetvoyage
  * @return {JSON} utilisateur
@@ -590,7 +585,7 @@ app.post("/utilisateurs/:emailutilisateur/carnet", jsonParser,function(req,res){
  * @param {String} nomtheme
  * @return {JSON} theme
  */
-app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
+app.post("/carnets/:idcarnetvoyage/themes", jsonParser,function(req,res){
     if(req.body && req.body.token && req.body.nomtheme) {
 
         //Verification token
@@ -739,7 +734,6 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser,fun
     }
 });
 
-
 /**
  * Ajout d'une nouvelle image
  *
@@ -752,22 +746,30 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
     dest: 'uploads/',
     rename: function (fieldname, filename) {
         return filename+Date.now();
-
     },
     changeDest: function(dest, req, res) {
         var newDestination = dest + req.params.idcarnetvoyage + "/" + req.params.idtheme;
         var stat = null;
+
+        try {
+            fs.mkdirSync(dest + req.params.idcarnetvoyage);
+        } catch(err){}
+
+        try {
+            fs.mkdirSync(dest + req.params.idcarnetvoyage + "/" + req.params.idtheme);
+        } catch(err){}
+
         try {
             stat = fs.statSync(newDestination);
             console.log("newDest");
         } catch (err) {
-            fs.mkdirSync(dest + req.params.idcarnetvoyage);
-            fs.mkdirSync(dest + req.params.idcarnetvoyage + "/" + req.params.idtheme);
+            /*fs.mkdirSync(dest + req.params.idcarnetvoyage);
+            fs.mkdirSync(dest + req.params.idcarnetvoyage + "/" + req.params.idtheme);*/
         }
         if (stat && !stat.isDirectory()) {
             throw new Error('Directory cannot be created because an inode of a different type exists at "' + dest + '"');
         }
-        return newDestination
+        return newDestination;
     }
 
 }), function(req, res) {
