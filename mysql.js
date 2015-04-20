@@ -1021,7 +1021,7 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParse
         function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
-                console.log("500 : DEL : /texte \n");
+                console.log("500 : DELETE : /texte \n");
             }
             else {
                 res.sendStatus(200);
