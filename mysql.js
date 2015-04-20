@@ -58,7 +58,6 @@ var done = false;
 app.set('json spaces', 0);
 
 var qs = require('querystring');
-
 var jsonParser = bodyParser.json();
 
 app.use(function (req, res, next) {
@@ -76,16 +75,34 @@ connection.connect(function(err){
     }
 });
 
+
 /**
- * Authenticate
+ * Connexion
  */
-app.post("/authenticate", jsonParser, function(req,res){
+app.post("/connexion", jsonParser, function(req,res){
+
+    //Génération d'un token
+    var token =  Math.random().toString(36).substr(2) +  Math.random().toString(36).substr(2);
+
     if(req.body && req.body.emailutilisateur && req.body.motdepasse) {
+
+        //Insertion du token dans la base
+        connection.query('UPDATE `utilisateur` ' +
+        'SET `token`= "'+ token +'" ' +
+        'WHERE `emailutilisateur` = "'+ req.body.emailutilisateur +'" AND `motdepasse` = "'+req.body.motdepasse+'"', function(err, rows, fields) {
+            if (err) {
+                console.log("500 : Insert : authenticate");
+                res.sendStatus(500);
+            }
+        });
+
+        //Retour
         connection.query('SELECT `utilisateur`.emailutilisateur, `utilisateur`.token, `carnetvoyage`.idcarnetvoyage ' +
         'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
         'WHERE `utilisateur`.motdepasse = "'+ req.body.motdepasse +'" AND ' +
         '`utilisateur`.emailutilisateur = "'+ req.body.emailutilisateur +'"', function(err, rows, fields) {
             if (err || rows.length == 0 || rows.length >= 2) {
+                console.log("500 : select : authenticate");
                 res.sendStatus(500);
             }
             else {
@@ -98,9 +115,33 @@ app.post("/authenticate", jsonParser, function(req,res){
 });
 
 /**
- * LogOut
+ * Connexion avec token
  */
-app.post("/logout", jsonParser, function(req,res){
+app.post("/connexiontoken", jsonParser, function(req,res){
+    if(req.body && req.body.emailutilisateur && req.body.token) {
+
+        //Retour
+        connection.query('SELECT `utilisateur`.emailutilisateur, `utilisateur`.token, `carnetvoyage`.idcarnetvoyage ' +
+        'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
+        'WHERE `utilisateur`.token = "'+ req.body.token +'" AND ' +
+        '`utilisateur`.emailutilisateur = "'+ req.body.emailutilisateur +'"', function(err, rows, fields) {
+            if (err || rows.length == 0 || rows.length >= 2) {
+                console.log("500 : select : authenticate");
+                res.sendStatus(500);
+            }
+            else {
+                res.json(rows[0]);
+            }
+        });
+    } else {
+        res.sendStatus(400);
+    }
+});
+
+/**
+ * Deconnexion
+ */
+app.post("/deconnexion", jsonParser, function(req,res){
     if(req.body && req.body.emailutilisateur) {
         connection.query('UPDATE `utilisateur` SET `token`= null WHERE emailutilisateur = "'+ req.body.emailutilisateur +'"', function(err, rows, fields) {
             if (err) {
@@ -118,25 +159,25 @@ app.post("/logout", jsonParser, function(req,res){
 });
 
 /**
- * Verif token
+ * Email Exists
  */
-function verificationToken(emailutilisateur, token){
-    connection.query('SELECT * FROM `utilisateur` WHERE emailutilisateur = "'+emailutilisateur+'" AND token = "'+token+'"', function(err, rows, fields) {
-        if (err || rows.length == 0) {
-            return false;
-        }
-        else {
-            return true;
+app.post("/exists/utilisateurs/:emailutilisateur", jsonParser, function(req, res){
+    connection.query('SELECT * FROM `utilisateur` WHERE emailutilisateur = "'+req.params.emailutilisateur+'";', function(err, rows, fields) {
+        if (err || rows.size == 0) {
+            res.sendStatus(500);
+            console.log("exists Utilisateur 500");
+        }else{
+            res.sendStatus(200);
+            console.log("exists Utilisateur 200");
         }
     });
-}
+});
 
 
 //GET
 
 /**
  * Retourne un theme
- * /carnets/:idcarnetvoyage/themes/:idtheme
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res){
     var idtheme = req.params.idtheme;
@@ -241,7 +282,6 @@ app.get("/carnets", jsonParser, function(req,res){
 
 /**
  * Retourne la liste des textes d'un theme
- * paramètre id du theme
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -264,7 +304,6 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser, function(
 
 /**
  * Retourne la liste des images d'un theme
- * id theme
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme/images", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -287,7 +326,6 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/images", jsonParser, function(
 
 /**
  * Retourne les commentaires du theme
- * SELECT * FROM `commenter` WHERE idtheme = ?;
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -310,7 +348,6 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, fun
 
 /**
  * Retourne la liste des themes du carnet
- * SELECT * FROM `theme` WHERE idcarnetvoyage = ?;
  */
 app.get("/carnets/:idtheme/themes", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -333,7 +370,6 @@ app.get("/carnets/:idtheme/themes", jsonParser, function(req,res){
 
 /**
  * Retourne l'id du carnet de utilisateurs
- * SELECT idcarnetvoyage, nomcarnetvoyage FROM `carnetvoyage` WHERE emailutilisateur = ?;
  */
 app.get("/utilisateurs/:emailutilisateur/carnet", jsonParser, function(req,res){
     var emailutilisateur = req.params.emailutilisateur;
@@ -381,6 +417,9 @@ app.get("/utilisateurs/:emailutilisateur", jsonParser, function(req,res){
         });
 });
 
+/**
+ * get images
+ */
 app.get("/uploads/:idcarnetvoyage/:idtheme/:idimage", jsonParser, function(req,res){
     var img = fs.readFileSync('uploads/'+req.params.idcarnetvoyage+'/'+req.params.idtheme+'/'+req.params.idimage);
     res.writeHead(200, {'Content-Type': 'image/*' });
@@ -448,21 +487,19 @@ app.post("/utilisateurs/:emailutilisateur", jsonParser,function(req,res){
 /**
  * Ajout d'un carnet
  */
-app.post("/users/:emailutilisateur/carnet", jsonParser,function(req,res){
+app.post("/utilisateurs/:emailutilisateur/carnet", jsonParser,function(req,res){
 
-    //console.log(verificationToken(req.params.emailutilisateur, req.body.token));
+    if(req.body && req.body.token && req.body.nomcarnetvoyage) {
 
-    if(req.body && /*verificationToken(req.params.emailutilisateur, req.body.token) &&*/ req.body.carnet) {
-
-        /*connection.query("SELECT * FROM `utilisateur` WHERE " +
+        connection.query("SELECT * FROM `utilisateur` WHERE " +
             "emailutilisateur = '" + req.params.emailutilisateur +"' AND " +
             "token = '"+req.body.token+"';",
             function(err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
-                    console.log("500 : POST : /carnet \n");
+                    console.log("500 : POST : /token - carnet \n");
                 }
-            });*/
+            });
 
         //Execution
         connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
@@ -496,7 +533,16 @@ app.post("/users/:emailutilisateur/carnet", jsonParser,function(req,res){
 app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
     if(req.body && req.body.token && req.body.nomtheme) {
 
-        //Verification Token
+        //Verification token
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+         "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+         " `utilisateur`.`token` = '"+req.body.token+"'",
+         function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : POST : /verifToken - theme \n");
+            }
+         });
 
         //Execution
         connection.query('INSERT INTO `theme`(`nomtheme`, `idcarnetvoyage`) ' +
@@ -526,12 +572,20 @@ app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
 
 /**
  * Ajout d'un nouveau texte
- * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/carnets/:idcarnetvoyage/themes/:idtheme/texte", jsonParser,function(req,res){
+app.post("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser,function(req,res){
 
     if(req.body) {
         //Verification du Token
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+            " `utilisateur`.`token` = '"+req.body.token+"'",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /verifToken - theme \n");
+                }
+            });
 
         //Execution
         connection.query('' +
@@ -565,13 +619,21 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/texte", jsonParser,function(r
 
 /**
  * Ajout d'un commentaire sur le theme
- * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
-app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commenter", jsonParser,function(req,res){
+app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser,function(req,res){
 
     if(req.body && req.body.emailutilisateur) {
 
-        //verif
+        //verification Token
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+            " `utilisateur`.`token` = '"+req.body.token+"'",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /verifToken - theme \n");
+                }
+            });
 
         //execution
         connection.query('' +
@@ -603,49 +665,9 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commenter", jsonParser,functi
     }
 });
 
-/**
- * Ajout d'une nouvelle image
- * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
- */
-/*app.post("/carnets/:idcarnetvoyage/themes/:idtheme/imag", jsonParser,function(req,res){
-
-    if(req.body && req.body.token) {
-
-        //Verification
-
-
-        //Execution
-        connection.query('' +
-        'INSERT INTO `image`(`pathimage`, `legendeimage`, `titreimage`, `idtheme`) ' +
-        'VALUES (' +
-        '"'+ req.body.path +'",' +
-        '"'+ req.body.legende +'",' +
-        '"'+ req.body.titre +'",' +
-        ''+ req.params.idtheme +')');
-
-        connection.query("SELECT * FROM `image` WHERE " +
-            "pathimage = '" + req.body.path +"' AND " +
-            "legendeimage = '" + req.body.legende +"' AND " +
-            "titreimage = '" + req.body.titre +"' AND " +
-            "idtheme = " + req.params.idtheme +"",
-            function(err, rows, fields) {
-                if (err || rows.length == 0) {
-                    res.sendStatus(500);
-                    console.log("500 : POST : /img \n");
-                }
-                else {
-                    res.json(rows[0]);
-                    console.log("200 : POST : /img \n");
-                }
-            });
-    } else {
-        res.sendStatus(400);
-    }
-});*/
 
 /**
  * Ajout d'une nouvelle image
- * idcarnetvoyage, idtheme, images, legende
  */
 app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
     dest: 'uploads/',
@@ -673,7 +695,15 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
     if(req.body && req.files) {
 
          //Verification
-        //console.log(req.files.file.name);
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+            " `utilisateur`.`token` = '"+req.body.token+"'",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /verifToken - theme \n");
+                }
+            });
 
         //Execution
         connection.query('' +
@@ -711,12 +741,20 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
 
 /**
  * Modification du texte
- *
  */
-app.put("/carnets/:idcarnetvoyage/themes/:idtheme/texte/:idtexte", jsonParser, function(req,res){
+app.put("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, function(req,res){
     if(req.body && req.body.titretexte && req.body.contenutexte) {
 
         //VerifToken
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+            " `utilisateur`.`token` = '"+req.body.token+"'",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /verifToken - theme \n");
+                }
+            });
 
         //Execution
         connection.query('UPDATE `texte` ' +
@@ -743,11 +781,21 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme/texte/:idtexte", jsonParser, f
 
 /**
  * Modification de l'image
- *
  */
 app.put("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, function(req,res){
-
     if(req.body) {
+
+        //Verification du Token
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+            " `utilisateur`.`token` = '"+req.body.token+"'",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /verifToken - theme \n");
+                }
+            });
+
         connection.query('UPDATE `image` SET ' +
         '`pathimage`= "'+ req.body.pathimage +'",' +
         '`legendeimage`= "'+ req.body.legendeimage +'",' +
@@ -774,11 +822,22 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, 
 
 /**
  * Modification du nom du theme
- * UPDATE `theme` SET `nomtheme`=[value-2] WHERE idtheme = ?;
  */
 app.put("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res){
 
     if(req.body && req.body.nomtheme) {
+
+        //Verification token
+        connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+            " `utilisateur`.`token` = '"+req.body.token+"'",
+            function(err, rows, fields) {
+                if (err || rows.length == 0) {
+                    res.sendStatus(500);
+                    console.log("500 : POST : /verifToken - theme \n");
+                }
+            });
+
         connection.query('UPDATE `theme` SET ' +
         '`nomtheme`= "'+ req.body.nomtheme +'" ' +
         'WHERE idtheme = '+ req.params.idtheme +'');
@@ -805,9 +864,20 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res
 
 /**
  * Suppression d'un texte
- * DELETE FROM `texte` WHERE idtexte = ?;
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, function(req,res){
+
+    //Verification token
+    connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+        "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+        " `utilisateur`.`token` = '"+req.body.token+"'",
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : POST : /verifToken - theme \n");
+            }
+        });
+
     connection.query('DELETE FROM `texte` ' +
         'WHERE idtexte = '+ req.params.idtexte +'',
         function(err, rows, fields) {
@@ -824,22 +894,19 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParse
 
 /**
  * Suppression d'une image
- * DELETE FROM `image` WHERE idimage = ?;
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, function(req,res){
 
-    /*console.log(req.params.idcarnetvoyage);
-    console.log(req.params.idtheme);
-    console.log(req.params.idimage);*/
-    //fs.remove("upload/"+req.params.idcarnetvoyage+"/"+req.params.idtheme+"/"+req.params.idimage+"");
-
-    /*fs.unlink("upload/"+req.params.idcarnetvoyage+"/"+req.params.idtheme+"/"+req.params.idimage+"", function(err) {
-        if(err) {
-            console.log(err);
-        } else {
-            console.log("Deleted the old markdown file : oldPath ");
-        }
-    });*/
+    //Verification token
+    connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+        "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+        " `utilisateur`.`token` = '"+req.body.token+"'",
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : POST : /verifToken - theme \n");
+            }
+        });
 
     connection.query('DELETE FROM `image` ' +
         'WHERE titreimage = "'+ req.params.idimage +'"',
@@ -857,9 +924,20 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParse
 
 /**
  * Suppression d'un commentaire
- * DELETE FROM `commenter` WHERE idtheme = ? AND emailutilisateur = ?;
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires/:idcommentaire", jsonParser, function(req,res){
+
+    //Verification token
+    connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+        "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+        " `utilisateur`.`token` = '"+req.body.token+"'",
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : POST : /verifToken - theme \n");
+            }
+        });
+
     connection.query('DELETE FROM `commenter` ' +
         'WHERE idcommentaire = '+ req.params.idcommentaire +'',
         function(err, rows, fields) {
@@ -876,9 +954,20 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires/:idcommentaire
 
 /**
  * Suppression d'un theme
- * DELETE FROM `theme` WHERE idtheme = ?;
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res){
+
+    //Verification token
+    connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+        "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+        " `utilisateur`.`token` = '"+req.body.token+"'",
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : POST : /verifToken - theme \n");
+            }
+        });
+
     connection.query('DELETE FROM `theme` ' +
         'WHERE idtheme = '+ req.params.idtheme +'',
         function(err, rows, fields) {
@@ -895,9 +984,20 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,
 
 /**
  * Suppression d'un carnet
- * DELETE FROM `carnetvoyage` WHERE idcarnetvoyage = ?;
  */
 app.delete("/carnets/:idcarnetvoyage", jsonParser, function(req,res){
+
+    //verification token
+    connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
+        "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage +" AND " +
+        " `utilisateur`.`token` = '"+req.body.token+"'",
+        function(err, rows, fields) {
+            if (err || rows.length == 0) {
+                res.sendStatus(500);
+                console.log("500 : POST : /verifToken - theme \n");
+            }
+        });
+
     connection.query('DELETE FROM `carnetvoyage` ' +
         'WHERE idcarnetvoyage = '+ req.params.idcarnetvoyage +'',
         function(err, rows, fields) {
