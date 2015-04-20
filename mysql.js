@@ -42,6 +42,7 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var url = require('url');
 var multer = require('multer');
+var basepath = "http://localhost:3000";
 
 var connection = mysql.createConnection({
     host     : 'localhost',
@@ -76,9 +77,9 @@ connection.connect(function(err){
 });
 
 /**
- * Authenticate
+ * Connexion
  */
-app.post("/authenticate", jsonParser, function(req,res){
+app.post("/connexion", jsonParser, function(req,res){
     if(req.body && req.body.emailutilisateur && req.body.motdepasse) {
         connection.query('SELECT `utilisateur`.emailutilisateur, `utilisateur`.token, `carnetvoyage`.idcarnetvoyage ' +
         'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
@@ -97,9 +98,9 @@ app.post("/authenticate", jsonParser, function(req,res){
 });
 
 /**
- * LogOut
+ * Déconnexion
  */
-app.post("/logout", jsonParser, function(req,res){
+app.post("/deconnexion", jsonParser, function(req,res){
     if(req.body && req.body.emailutilisateur) {
         connection.query('UPDATE `utilisateur` SET `token`= null WHERE emailutilisateur = "'+ req.body.emailutilisateur +'"', function(err, rows, fields) {
             if (err) {
@@ -311,8 +312,8 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, fun
  * Retourne la liste des themes du carnet
  * SELECT * FROM `theme` WHERE idcarnetvoyage = ?;
  */
-app.get("/carnets/:idtheme/themes", jsonParser, function(req,res){
-    var theme = req.params.idtheme;
+app.get("/carnets/:idcarnet/themes", jsonParser, function(req,res){
+    var theme = req.params.idcarnet;
 
     connection.query(
         'SELECT * ' +
@@ -447,7 +448,7 @@ app.post("/utilisateurs/:emailutilisateur", jsonParser,function(req,res){
 /**
  * Ajout d'un carnet
  */
-app.post("/users/:emailutilisateur/carnet", jsonParser,function(req,res){
+app.post("/carnets", jsonParser,function(req,res){
 
     //console.log(verificationToken(req.params.emailutilisateur, req.body.token));
 
@@ -492,7 +493,7 @@ app.post("/users/:emailutilisateur/carnet", jsonParser,function(req,res){
 /**
  * Ajout d'un theme
  */
-app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
+app.post("/carnets/:idcarnetvoyage/themes", jsonParser,function(req,res){
     if(req.body && req.body.token && req.body.nomtheme) {
 
         //Verification Token
@@ -527,7 +528,7 @@ app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
  * Ajout d'un nouveau texte
  * INSERT INTO `texte`(`titretexte`, `contenutexte`, `datetexte`, `idtheme`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-app.post("/carnets/:idcarnetvoyage/themes/:idtheme/texte", jsonParser,function(req,res){
+app.post("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser,function(req,res){
 
     if(req.body) {
         //Verification du Token
@@ -566,7 +567,7 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/texte", jsonParser,function(r
  * Ajout d'un commentaire sur le theme
  * INSERT INTO `commenter`(`idtheme`, `emailutilisateur`, `commentaire`, `datecommentaire`) VALUES ([value-1],[value-2],[value-3],[value-4])
  */
-app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commenter", jsonParser,function(req,res){
+app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser,function(req,res){
 
     if(req.body && req.body.emailutilisateur) {
 
@@ -606,7 +607,7 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commenter", jsonParser,functi
  * Ajout d'une nouvelle image
  * INSERT INTO `image`(`pathimage`, `legendeimage`, `idtheme`, `titreimage`) VALUES ([value-2],[value-3],[value-4],[value-5])
  */
-/*app.post("/carnets/:idcarnetvoyage/themes/:idtheme/imag", jsonParser,function(req,res){
+/*app.post("/carnets/:idcarnetvoyage/themes/:idtheme/images", jsonParser,function(req,res){
 
     if(req.body && req.body.token) {
 
@@ -646,39 +647,47 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commenter", jsonParser,functi
  * Ajout d'une nouvelle image
  * idcarnetvoyage, idtheme, images, legende
  */
-app.post('/carnets/:idcarnetvoyage/themes/:idtheme/image', jsonParser, multer({
+app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
     dest: 'uploads/',
     rename: function (fieldname, filename) {
         return filename+Date.now();
-
     },
     changeDest: function(dest, req, res) {
         var newDestination = dest + req.params.idcarnetvoyage + "/" + req.params.idtheme;
         var stat = null;
+
+        try {
+            fs.mkdirSync(dest + req.params.idcarnetvoyage);
+        } catch(err){}
+
+        try {
+            fs.mkdirSync(dest + req.params.idcarnetvoyage + "/" + req.params.idtheme);
+        } catch(err){}
+
         try {
             stat = fs.statSync(newDestination);
             console.log("newDest");
         } catch (err) {
-            fs.mkdirSync(dest + req.params.idcarnetvoyage);
-            fs.mkdirSync(dest + req.params.idcarnetvoyage + "/" + req.params.idtheme);
+            /*fs.mkdirSync(dest + req.params.idcarnetvoyage);
+            fs.mkdirSync(dest + req.params.idcarnetvoyage + "/" + req.params.idtheme);*/
         }
         if (stat && !stat.isDirectory()) {
             throw new Error('Directory cannot be created because an inode of a different type exists at "' + dest + '"');
         }
-        return newDestination
+        return newDestination;
     }
 
 }), function(req, res) {
-    if(req.body) {
+    if(req.files) {
 
         //Verification
-        //console.log(req.files.file.name);
+        //console.log(req.files);;
 
         //Execution
         connection.query('' +
         'INSERT INTO `image`(`pathimage`, `legendeimage`, `titreimage`, `idtheme`) ' +
-        'VALUES (' +
-        '"/uploads/'+ req.params.idcarnetvoyage+ '/'+ req.params.idtheme +'/'+ req.files.file.name +'",' +
+        'VALUES ("' +
+        basepath+'/uploads/'+ req.params.idcarnetvoyage+ '/'+ req.params.idtheme +'/'+ req.files.file.name +'",' +
         '"'+ req.body.legendeimage +'",' +
         '"'+ req.files.file.name +'",' +
         ''+ req.params.idtheme +')');
@@ -712,7 +721,7 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/image', jsonParser, multer({
  * Modification du texte
  *
  */
-app.put("/carnets/:idcarnetvoyage/themes/:idtheme/texte/:idtexte", jsonParser, function(req,res){
+app.put("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, function(req,res){
     if(req.body && req.body.titretexte && req.body.contenutexte) {
 
         //VerifToken
