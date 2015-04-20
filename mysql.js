@@ -77,7 +77,12 @@ connection.connect(function(err){
 
 
 /**
- * Connexion
+ * Connexion avec motdepasse
+ *
+ * @method /connexion
+ * @param {String} emailutilisateur
+ * @param {String} motdepasse
+ * @return {JSON} {"emailutilsateur":"", "token":"", "idcarnetvoyage":""}
  */
 app.post("/connexion", jsonParser, function(req,res){
 
@@ -116,6 +121,11 @@ app.post("/connexion", jsonParser, function(req,res){
 
 /**
  * Connexion avec token
+ *
+ * @method /connexiontoken
+ * @param {String} emailutilisateur
+ * @param {String} token
+ * @return {JSON} {"emailutilsateur":"", "token":"", "idcarnetvoyage":""}
  */
 app.post("/connexiontoken", jsonParser, function(req,res){
     if(req.body && req.body.emailutilisateur && req.body.token) {
@@ -140,6 +150,10 @@ app.post("/connexiontoken", jsonParser, function(req,res){
 
 /**
  * Deconnexion
+ *
+ * @method /deconnexion
+ * @param {String} emailutilisateur
+ * @return {200} return 200 on success
  */
 app.post("/deconnexion", jsonParser, function(req,res){
     if(req.body && req.body.emailutilisateur) {
@@ -160,6 +174,9 @@ app.post("/deconnexion", jsonParser, function(req,res){
 
 /**
  * Email Exists
+ *
+ * @method /exists/utilisateur/:emailutilisateur
+ * @return {200} return 200 on success
  */
 app.post("/exists/utilisateurs/:emailutilisateur", jsonParser, function(req, res){
     connection.query('SELECT * FROM `utilisateur` WHERE emailutilisateur = "'+req.params.emailutilisateur+'";', function(err, rows, fields) {
@@ -178,6 +195,9 @@ app.post("/exists/utilisateurs/:emailutilisateur", jsonParser, function(req, res
 
 /**
  * Retourne un theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme
+ * @return {JSON} theme
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res){
     var idtheme = req.params.idtheme;
@@ -264,7 +284,10 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res
 });
 
 /**
- * Retourne la liste de carnet
+ * Retourne la liste de carnets
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme
+ * @return {JSON} theme
  */
 app.get("/carnets", jsonParser, function(req,res){
     connection.query(
@@ -282,6 +305,9 @@ app.get("/carnets", jsonParser, function(req,res){
 
 /**
  * Retourne la liste des textes d'un theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/textes
+ * @return {JSON} textes
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -304,6 +330,9 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser, function(
 
 /**
  * Retourne la liste des images d'un theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/images
+ * @return {JSON} images
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme/images", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -326,6 +355,9 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/images", jsonParser, function(
 
 /**
  * Retourne les commentaires du theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/commentaires
+ * @return {JSON} commentaire
  */
 app.get("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -348,6 +380,9 @@ app.get("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, fun
 
 /**
  * Retourne la liste des themes du carnet
+ *
+ * @method /carnets/:idtheme/themes
+ * @return {JSON} themes
  */
 app.get("/carnets/:idtheme/themes", jsonParser, function(req,res){
     var theme = req.params.idtheme;
@@ -370,6 +405,9 @@ app.get("/carnets/:idtheme/themes", jsonParser, function(req,res){
 
 /**
  * Retourne l'id du carnet de utilisateurs
+ *
+ * @method /utilisateurs/:emailutilisateur/carnet
+ * @return {JSON} idcarnetvoyage, nomcarnetvoyage
  */
 app.get("/utilisateurs/:emailutilisateur/carnet", jsonParser, function(req,res){
     var emailutilisateur = req.params.emailutilisateur;
@@ -392,6 +430,9 @@ app.get("/utilisateurs/:emailutilisateur/carnet", jsonParser, function(req,res){
 
 /**
  * Retourne un utilisateur
+ *
+ * @method /utilisateurs/:emailutilisateur
+ * @return {JSON} utilisateur
  */
 app.get("/utilisateurs/:emailutilisateur", jsonParser, function(req,res){
     var emailutilisateur = req.params.emailutilisateur;
@@ -418,7 +459,10 @@ app.get("/utilisateurs/:emailutilisateur", jsonParser, function(req,res){
 });
 
 /**
- * get images
+ * Retourne une image
+ *
+ * @method /uploads/:idcarnetvoyage/:idtheme/:idimage
+ * @return {JSON} image
  */
 app.get("/uploads/:idcarnetvoyage/:idtheme/:idimage", jsonParser, function(req,res){
     var img = fs.readFileSync('uploads/'+req.params.idcarnetvoyage+'/'+req.params.idtheme+'/'+req.params.idimage);
@@ -431,6 +475,12 @@ app.get("/uploads/:idcarnetvoyage/:idtheme/:idimage", jsonParser, function(req,r
 
 /**
  * Ajout d'un utilisateur
+ *
+ * @method /utilisateurs/:emailutilisateur
+ * @param {String} token
+ * @param {String} motdepasse
+ * @param {String} nomcarnetvoyage
+ * @return {JSON} utilisateur
  */
 app.post("/utilisateurs/:emailutilisateur", jsonParser,function(req,res){
     var user;
@@ -486,6 +536,11 @@ app.post("/utilisateurs/:emailutilisateur", jsonParser,function(req,res){
 
 /**
  * Ajout d'un carnet
+ *
+ * @method /utilisateur/:emailutilisateur/carnet
+ * @param {String} token
+ * @param {String} nomcarnetvoyage
+ * @return {JSON} carnet
  */
 app.post("/utilisateurs/:emailutilisateur/carnet", jsonParser,function(req,res){
 
@@ -529,6 +584,11 @@ app.post("/utilisateurs/:emailutilisateur/carnet", jsonParser,function(req,res){
 
 /**
  * Ajout d'un theme
+ *
+ * @method /carnets/:idcarnetvoyage/theme
+ * @param {String} token
+ * @param {String} nomtheme
+ * @return {JSON} theme
  */
 app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
     if(req.body && req.body.token && req.body.nomtheme) {
@@ -572,6 +632,13 @@ app.post("/carnets/:idcarnetvoyage/theme", jsonParser,function(req,res){
 
 /**
  * Ajout d'un nouveau texte
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/textes
+ * @param {String} token
+ * @param {String} titretexte
+ * @param {String} contenutexte
+ * @param {String} datetexte "AAAA-MM-DD HH:MM:SS"
+ * @return {JSON} texte
  */
 app.post("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser,function(req,res){
 
@@ -619,6 +686,13 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser,function(
 
 /**
  * Ajout d'un commentaire sur le theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/commentaires
+ * @param {String} token
+ * @param {String} emailutilisateur
+ * @param {String} commentaire
+ * @param {String} datecommentaire "AAAA-MM-DD HH:MM:SS"
+ * @return {JSON} commentaire
  */
 app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser,function(req,res){
 
@@ -668,6 +742,11 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser,fun
 
 /**
  * Ajout d'une nouvelle image
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/images
+ * @param {String} token
+ * @param {String} legendeimage
+ * @return {JSON} image
  */
 app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
     dest: 'uploads/',
@@ -741,6 +820,13 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
 
 /**
  * Modification du texte
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte
+ * @param {String} token
+ * @param {String} titretexte
+ * @param {String} contenutexte
+ * @param {String} datetexte "AAAA-MM-DD HH:MM:SS"
+ * @return {JSON} texte
  */
 app.put("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, function(req,res){
     if(req.body && req.body.titretexte && req.body.contenutexte) {
@@ -781,6 +867,13 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, 
 
 /**
  * Modification de l'image
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/images
+ * @param {String} token
+ * @param {String} pathimage
+ * @param {String} legendeimage
+ * @param {String} titreimage
+ * @return {JSON} image
  */
 app.put("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, function(req,res){
     if(req.body) {
@@ -822,6 +915,11 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, 
 
 /**
  * Modification du nom du theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme
+ * @param {String} token
+ * @param {String} nomtheme
+ * @return {JSON} theme
  */
 app.put("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res){
 
@@ -864,6 +962,10 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res
 
 /**
  * Suppression d'un texte
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte
+ * @param {String} token
+ * @return {200} return 200 on success
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, function(req,res){
 
@@ -894,6 +996,10 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParse
 
 /**
  * Suppression d'une image
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage
+ * @param {String} token
+ * @return {200} return 200 on success
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, function(req,res){
 
@@ -924,6 +1030,10 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParse
 
 /**
  * Suppression d'un commentaire
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme/commentaires/:idcommentaire
+ * @param {String} token
+ * @return {200} return 200 on success
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires/:idcommentaire", jsonParser, function(req,res){
 
@@ -954,6 +1064,10 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires/:idcommentaire
 
 /**
  * Suppression d'un theme
+ *
+ * @method /carnets/:idcarnetvoyage/themes/:idtheme
+ * @param {String} token
+ * @return {200} return 200 on success
  */
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,res){
 
@@ -984,6 +1098,10 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function(req,
 
 /**
  * Suppression d'un carnet
+ *
+ * @method /carnets/:idcarnetvoyage
+ * @param {String} token
+ * @return {200} return 200 on success
  */
 app.delete("/carnets/:idcarnetvoyage", jsonParser, function(req,res){
 
