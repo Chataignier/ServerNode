@@ -520,7 +520,7 @@ app.post("/utilisateurs", jsonParser, function (req, res) {
                     if (req.body.nomcarnetvoyage) {
                         nomCarnet = req.body.nomcarnetvoyage;
                     } else {
-                        nomCarnet = "Carnet" + req.body.emailutilisateur;
+                        nomCarnet = "Carnet de " + req.body.emailutilisateur;
                     }
                     connection.query('INSERT INTO `carnetvoyage`(`nomcarnetvoyage`, `emailutilisateur`)' +
                         'VALUES (' +
