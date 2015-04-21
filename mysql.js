@@ -1027,7 +1027,7 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParse
             }
             else {
                 connection.query('DELETE FROM `image` ' +
-                    'WHERE idimage = "' + req.params.idimage + '"',
+                    'WHERE idimage = ' + req.params.idimage + '',
                     function (err, rows, fields) {
                         if (err || rows.length == 0) {
                             res.sendStatus(500);
