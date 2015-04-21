@@ -509,19 +509,6 @@ app.post("/utilisateurs", jsonParser, function (req, res) {
                     'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
                     'WHERE `utilisateur`.motdepasse = "' + req.body.motdepasse + '" AND ' +
                     '`utilisateur`.emailutilisateur = "' + req.body.emailutilisateur + '"', function (err, rows, fields) {
-                    /*connection.query("SELECT * FROM `carnetvoyage` WHERE " +
-                        "emailutilisateur = '" + req.body.emailutilisateur + "';",
-                        function (err, rows, fields) {
-                            if (err || rows.length == 0) {
-                                res.sendStatus(500);
-                                console.log("500 : POST : /carnet \n");
-                            }
-                            else {
-                                res.setHeader('Content-Type', 'application/json');
-                                res.writeHead(200);
-                                res.end('{"utilisateur":' + user + ',"carnetvoyage":' + JSON.stringify(rows[0]) + '}');
-                                console.log("200 : POST : /utilisateur \n");
-                            }*/
                             if (err || rows.length == 0 || rows.length >= 2) {
                                 console.log("500 : select : authenticate");
                                 res.sendStatus(500);
