@@ -42,6 +42,7 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var url = require('url');
 var multer = require('multer');
+var cors = require('cors');
 var basepath = "http://localhost:3000";
 
 var connection = mysql.createConnection({
@@ -60,12 +61,13 @@ app.set('json spaces', 0);
 var qs = require('querystring');
 var jsonParser = bodyParser.json();
 
-app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://localhost");
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+/*app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTION");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
-});
+});*/
+app.use(cors());
 
 connection.connect(function (err) {
     if (!err) {
@@ -126,12 +128,12 @@ app.post("/connexion", jsonParser, function (req, res) {
  * @return {JSON} {"emailutilsateur":"", "token":"", "idcarnetvoyage":""}
  */
 app.post("/authentification", jsonParser, function (req, res) {
-    if (req.body && req.body.emailutilisateur && req.body.token) {
+    if (req.body && req.body.emailutilisateur && req.headers.token) {
 
         //Retour
         connection.query('SELECT `utilisateur`.emailutilisateur, `utilisateur`.token, `carnetvoyage`.idcarnetvoyage ' +
         'FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur` ' +
-        'WHERE `utilisateur`.token = "' + req.body.token + '" AND ' +
+        'WHERE `utilisateur`.token = "' + req.headers.token + '" AND ' +
         '`utilisateur`.emailutilisateur = "' + req.body.emailutilisateur + '"', function (err, rows, fields) {
             if (err || rows.length == 0 || rows.length >= 2) {
                 console.log("500 : select : authenticate");
@@ -480,12 +482,15 @@ app.get("/uploads/:idcarnetvoyage/:idtheme/:idimage", jsonParser, function (req,
 app.post("/utilisateurs", jsonParser, function (req, res) {
     var user;
 
+    //Génération d'un token
+    var token = Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
+
     if (req.body && req.body.motdepasse) {
         connection.query('INSERT INTO `utilisateur`(`emailutilisateur`, `motdepasse`, `token`) ' +
             'VALUES (' +
             '"' + req.body.emailutilisateur + '",' +
             '"' + req.body.motdepasse + '",' +
-            '"token")',
+            '"' + token + '")',
             function (err, rows, fields) {
                 if (err) {
                     res.sendStatus(500);
@@ -535,11 +540,11 @@ app.post("/utilisateurs", jsonParser, function (req, res) {
  */
 app.post("/utilisateurs/:emailutilisateur/carnet", jsonParser, function (req, res) {
 
-    if (req.body && req.body.token && req.body.nomcarnetvoyage) {
+    if (req.body && req.headers.token && req.body.nomcarnetvoyage) {
 
         connection.query("SELECT * FROM `utilisateur` WHERE " +
             "emailutilisateur = '" + req.params.emailutilisateur + "' AND " +
-            "token = '" + req.body.token + "';",
+            "token = '" + req.headers.token + "';",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -582,12 +587,12 @@ app.post("/utilisateurs/:emailutilisateur/carnet", jsonParser, function (req, re
  * @return {JSON} theme
  */
 app.post("/carnets/:idcarnetvoyage/themes", jsonParser, function (req, res) {
-    if (req.body && req.body.token && req.body.nomtheme) {
+    if (req.body && req.headers.token && req.body.nomtheme) {
 
         //Verification token
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -639,7 +644,7 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/textes", jsonParser, function
         //Verification du Token
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -695,7 +700,7 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, fu
         //verification Token
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -781,7 +786,7 @@ app.post('/carnets/:idcarnetvoyage/themes/:idtheme/images', multer({
         //Verification
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -838,7 +843,7 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, 
         //VerifToken
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -886,7 +891,7 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, 
         //Verification du Token
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -934,7 +939,7 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function (req, r
         //Verification token
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
             "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-            " `utilisateur`.`token` = '" + req.body.token + "'",
+            " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
                     res.sendStatus(500);
@@ -977,10 +982,10 @@ app.put("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function (req, r
 app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParser, function (req, res) {
 
     //Verification token
-    console.log(req.body.token);
+    //console.log(req.headers.token);
     connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
         "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-        " `utilisateur`.`token` = '" + req.body.token + "'",
+        " `utilisateur`.`token` = '" + req.headers.token + "'",
         function (err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
@@ -1014,7 +1019,7 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParse
     //Verification token
     connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
         "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-        " `utilisateur`.`token` = '" + req.body.token + "'",
+        " `utilisateur`.`token` = '" + req.headers.token + "'",
         function (err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
@@ -1049,7 +1054,7 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires/:idcommentaire
     //Verification token
     connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
         "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-        " `utilisateur`.`token` = '" + req.body.token + "'",
+        " `utilisateur`.`token` = '" + req.headers.token + "'",
         function (err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
@@ -1086,11 +1091,11 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function (req
     //Verification token
     connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
         "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-        " `utilisateur`.`token` = '" + req.body.token + "'",
+        " `utilisateur`.`token` = '" + req.headers.token + "'",
         function (err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
-                console.log("500 : POST : /verifToken - theme \n");
+                console.log("500 : DEL /verifToken - theme \n");
             }
             else {
                 connection.query('DELETE FROM `theme` ' +
@@ -1098,11 +1103,11 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme", jsonParser, function (req
                     function (err, rows, fields) {
                         if (err || rows.length == 0) {
                             res.sendStatus(500);
-                            console.log("500 : DEL : /commenter \n");
+                            console.log("500 : DEL : /theme \n");
                         }
                         else {
                             res.sendStatus(200);
-                            console.log("200 : DEL : /commenter \n");
+                            console.log("200 : DEL : /theme \n");
                         }
                     });
             }
@@ -1121,7 +1126,7 @@ app.delete("/carnets/:idcarnetvoyage", jsonParser, function (req, res) {
     //verification token
     connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
         "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
-        " `utilisateur`.`token` = '" + req.body.token + "'",
+        " `utilisateur`.`token` = '" + req.headers.token + "'",
         function (err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
