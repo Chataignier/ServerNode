@@ -1003,7 +1003,7 @@ app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/textes/:idtexte", jsonParse
  * @param {String} token
  * @return {200} return 200 on success
  */
-lapp.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, function(req,res){
+app.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonParser, function(req,res){
 
     //Verification token
     connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
@@ -1017,7 +1017,7 @@ lapp.delete("/carnets/:idcarnetvoyage/themes/:idtheme/images/:idimage", jsonPars
         });
 
     connection.query('DELETE FROM `image` ' +
-        'WHERE idimage = '+ req.params.idimage +'',
+        'WHERE idimage = "'+ req.params.idimage +'"',
         function(err, rows, fields) {
             if (err || rows.length == 0) {
                 res.sendStatus(500);
