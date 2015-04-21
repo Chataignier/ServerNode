@@ -182,19 +182,19 @@ app.post("/deconnexion", jsonParser, function (req, res) {
 });
 
 /**
- * Email Exists
+ * Vérifie que l'email n'existe pas dans la base de données
  * @method /exists/utilisateur/:emailutilisateur
  * @return {200} return 200 on success
  */
-app.post("/exists/utilisateurs/:emailutilisateur", jsonParser, function (req, res) {
+app.get("/exists/utilisateurs/:emailutilisateur", jsonParser, function (req, res) {
     connection.query('SELECT * FROM `utilisateur` WHERE emailutilisateur = "' +
     req.params.emailutilisateur + '";', function (err, rows, fields) {
-        if (err || rows.length == 0) {
-            res.sendStatus(500);
-            console.log("exists Utilisateur 500");
-        } else {
+        if (rows.length == 0) {
             res.sendStatus(200);
-            console.log("exists Utilisateur 200");
+            console.log("200 : GET : Utilisateur inexistant");
+        } else {
+            res.sendStatus(500);
+            console.log("500 : GET : Utilisateur existant");
         }
     });
 });
