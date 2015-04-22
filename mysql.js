@@ -6,36 +6,8 @@
  *  - PUT : modification de champs (UPDATE)
  *  - DELETE : suppression de champs (DELETE)
  *
- * Besoin :
- *  - GET : /utilisateurs/:email
- *          /carnets/:carnet/themes/:themes/textes                      Retourne la liste des textes
- d'un thème
- *          /carnets/:carnet/themes/:themes/images                      Retourne la liste des images
- d'un thème
- *          /carnets/:carnet/themes/:themes/commentaires                Retourne les commentaires du
- theme
- *          /carnets/:carnet/themes/:themes/                            Retourne la liste des themes
- du carnet
- *          /carnets/:carnet/                                           Retourne l'id du carnet du
- utilisateurs
  *
- *  - POST: /carnets/:carnet/themes/:themes/textes                      Ajout d'un nouveau texte
- *          /carnets/:carnet/themes/:themes/images                      Ajout d'une nouvelle image
- *          /carnets/:carnet/themes/:themes/commentaires                Ajout d'un commentaire sur le
- theme
- *          /carnets/:carnet/themes/                                    Ajout d'un theme
- *
- *
- *  - PUT : /carnets/:carnet/themes/:themes/textes/:textes              Modification du textes
- *          /carnets/:carnet/themes/:themes/images/:images              Modification de l'images
- *          /carnets/:carnet/themes/:themes/                            Modification du nom du theme
- *
- *  - DEL : /carnets/:carnet/themes/:themes/textes/:textes              Suppression d'un texte
- *          /carnets/:carnet/themes/:themes/image/:images               Suppresion d'une image
- *          /carnets/:carnet/themes/:themes/commentaires/:commentaire   Suppression d'un com
- *          /carnets/:carnet/themes/:themes/                            Supppresion d'un theme
- *          /carnets/:carnet/                                           Suppresion d'un carnet
- */
+ * */
 
 /**
  * Connexion
