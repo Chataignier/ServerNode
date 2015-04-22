@@ -1,6 +1,6 @@
 # ServerNode
 
-Server REST permettant d'accèder à la base de données, backend de notre application "Carnet de Voyage".
+Server REST permettant d'accèder à la base de données de notre application "Carnet de Voyage".
 Une base de données MySQL "carnetvoyage" doit être creer. Importé ensuite sa structure (fichier carnetvoyage.sql)  
 
 Pour installer et executer, suivez les trois étapes dans l'ordre :
@@ -17,16 +17,16 @@ Import de la base de données
 ----------------------------
 Installation de WAMP.
 
-Creer une base de données appelé "carnetvoyage".
+Creer une base de données appelée "carnetvoyage".
 
-Importer la base de données avec le fichier carnetvoyage.mysql
+Importer la base de données avec le fichier carnetvoyage.sql
 
 Execution
 ---------
 Apres avoir installé le projet (git clone sur votre ordinateur), et la base de données vous pouvez à présent l'executer.
 
-Placer vous a la racine du projet (C:/.../../ServerNode/) avec un console windows (cmd). Puis executer la commande suivante "node mysql.js".
+Placez-vous à la racine du projet (C:/.../../ServerNode/) avec un console windows (cmd). Puis executer la commande suivante "node mysql.js".
 
-Si l'application s'executer bien vous devriez voir afficher  "Database is connected".
+Si l'application s'executer bien vous devriez voir afficher "Database is connected".
 
 Les identifiants de notre base de données en local sont : user:"root" password: Pas de password
