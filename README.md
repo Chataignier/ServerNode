@@ -1,32 +1,33 @@
 # ServerNode
 
 Server REST permettant d'accèder à la base de données de notre application "Carnet de Voyage".
-Une base de données MySQL "carnetvoyage" doit être creer. Importé ensuite sa structure (fichier carnetvoyage.sql)  
 
-Pour installer et executer, suivez les trois étapes dans l'ordre :
-Installation, Import de la base, Execution.
+Pour installer et exécuter, suivez les trois étapes dans l'ordre :
+Installation, Importation de la base de données et Exécution.
+
+Pré-requis
+----------
+Installation de nodeJS : https://nodejs.org/download/
 
 Installation
 ------------
+Pour installer l'application, il faut simplement récupérer ce répertoire Git (git clone)
 
-Vous devez tout d'abord installer les dépendances suivantes pour pouvoir executer l'application ServerNode.  
+Importation de la base de données
+---------------------------------
+Créer une base de données MySQL appelée "carnetvoyage".
+Importer la structure de la base de données avec le fichier carnetvoyage.sql
 
-Installation de nodeJS : https://nodejs.org/download/
-
-Import de la base de données
-----------------------------
-Installation de WAMP.
-
-Creer une base de données appelée "carnetvoyage".
-
-Importer la base de données avec le fichier carnetvoyage.sql
-
-Execution
+Exécution
 ---------
-Apres avoir installé le projet (git clone sur votre ordinateur), et la base de données vous pouvez à présent l'executer.
+Pour lancer le serveur, il suffit d'exécuter la commande "node mysql.js" dans le répertoire d'installation du serveur.
 
-Placez-vous à la racine du projet (C:/.../../ServerNode/) avec un console windows (cmd). Puis executer la commande suivante "node mysql.js".
+Si l'application affiche "Database is connected", le serveur est en fonctionnement.
 
-Si l'application s'executer bien vous devriez voir afficher "Database is connected".
-
-Les identifiants de notre base de données en local sont : user:"root" password: Pas de password
+NB: La configuration de base de données par défaut est :
+{	
+	host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'carnetvoyage'
+}
