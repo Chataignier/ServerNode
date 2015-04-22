@@ -722,7 +722,7 @@ app.post("/carnets/:idcarnetvoyage/themes/:idtheme/commentaires", jsonParser, fu
 
         //verification Token
         connection.query("SELECT * FROM `utilisateur` INNER JOIN `carnetvoyage` ON `utilisateur`.`emailutilisateur` = `carnetvoyage`.`emailutilisateur`  WHERE " +
-            "`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +
+            /*"`carnetvoyage`.`idcarnetvoyage` = " + req.params.idcarnetvoyage + " AND " +*/
             " `utilisateur`.`token` = '" + req.headers.token + "'",
             function (err, rows, fields) {
                 if (err || rows.length == 0) {
